@@ -649,4 +649,142 @@
         author: "Froi",
         initials: "FG",
         isMine: true,
-        time: "Just
+        time: "Just now",
+        text,
+        image,
+        likes: 0,
+        liked: false,
+        comments: []
+      };
+
+      posts.unshift(newPost);
+      savePosts();
+      textEl.value = "";
+      imgEl.value = "";
+      imgEl.style.display = "none";
+      renderPosts();
+    }
+
+    function toggleLike(id) {
+      const post = posts.find(p => p.id === id);
+      if (!post) return;
+      post.liked = !post.liked;
+      post.likes += post.liked ? 1 : -1;
+      savePosts();
+      renderPosts();
+    }
+
+    function addComment(event, id) {
+      event.preventDefault();
+      const input = event.target.querySelector("input");
+      const commentText = input.value.trim();
+      if (!commentText) return;
+
+      const post = posts.find(p => p.id === id);
+      if (!post) return;
+
+      post.comments.push({ author: "Froi", text: commentText });
+      savePosts();
+      renderPosts();
+    }
+
+    function deletePost(id) {
+      posts = posts.filter(p => p.id !== id);
+      savePosts();
+      renderPosts();
+    }
+
+    function filterFeed(filter, tabEl) {
+      currentFilter = filter;
+      if (tabEl) {
+        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+        tabEl.classList.add("active");
+      }
+      renderPosts();
+    }
+
+    function resetDemoData() {
+      posts = [...defaultPosts];
+      savePosts();
+      renderPosts();
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[m]));
+    }
+
+    function renderPosts() {
+      const container = document.getElementById("postsContainer");
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+
+      const filtered = posts.filter(post => {
+        const matchesSearch =
+          post.text.toLowerCase().includes(searchQuery) ||
+          post.author.toLowerCase().includes(searchQuery);
+        if (!matchesSearch) return false;
+        if (currentFilter === "liked") return post.liked;
+        if (currentFilter === "mine") return post.isMine;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="card" style="text-align:center; color:#65676b;">No posts found in this view.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(post => `
+        <article class="card">
+          <div class="post-header">
+            <div class="post-author-info">
+              <div class="avatar">${escapeHTML(post.initials)}</div>
+              <div>
+                <div class="post-author-name">${escapeHTML(post.author)}</div>
+                <div class="post-time">${escapeHTML(post.time)} · 🌐</div>
+              </div>
+            </div>
+            <button class="delete-post" title="Delete post" onclick="deletePost(${post.id})">✕</button>
+          </div>
+
+          ${post.text ? `<div class="post-content">${escapeHTML(post.text)}</div>` : ""}
+          ${post.image ? `<img class="post-image" src="${escapeHTML(post.image)}" alt="Post attachment" onerror="this.style.display='none'" />` : ""}
+
+          <div class="post-stats">
+            <span>👍 ${post.likes} ${post.likes === 1 ? "Like" : "Likes"}</span>
+            <span>${post.comments.length} ${post.comments.length === 1 ? "Comment" : "Comments"}</span>
+          </div>
+
+          <div class="post-buttons">
+            <button class="${post.liked ? "liked" : ""}" onclick="toggleLike(${post.id})">
+              ${post.liked ? "👍 Liked" : "👍 Like"}
+            </button>
+            <button onclick="document.getElementById('comment-input-${post.id}').focus()">
+              💬 Comment
+            </button>
+          </div>
+
+          <div class="comments-section">
+            ${post.comments.map(c => `
+              <div class="comment-item">
+                <div class="avatar" style="width:28px; height:28px; font-size:11px;">${escapeHTML(c.author[0])}</div>
+                <div class="comment-bubble">
+                  <div class="comment-author">${escapeHTML(c.author)}</div>
+                  <div>${escapeHTML(c.text)}</div>
+                </div>
+              </div>
+            `).join("")}
+
+            <form class="comment-form" onsubmit="addComment(event, ${post.id})">
+              <div class="avatar" style="width:28px; height:28px; font-size:11px;">FG</div>
+              <input id="comment-input-${post.id}" type="text" placeholder="Write a comment..." />
+            </form>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    renderPosts();
+  </script>
+</body>
+</html>
