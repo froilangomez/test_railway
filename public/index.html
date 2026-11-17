@@ -1,10 +1,652 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My Railway Site</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SocialBook — Railway Edition</title>
+  <style>
+    :root {
+      --bg-body: #f0f2f5;
+      --bg-card: #ffffff;
+      --bg-hover: #f2f3f5;
+      --bg-input: #f0f2f5;
+      --blue-primary: #1877f2;
+      --blue-hover: #166fe5;
+      --green-online: #31a24c;
+      --text-primary: #050505;
+      --text-secondary: #65676b;
+      --border-color: #ced0d4;
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-primary);
+    }
+
+    /* Top Navigation Bar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 56px;
+      background: var(--bg-card);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--blue-primary);
+      color: #fff;
+      font-size: 28px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .search-box {
+      background: var(--bg-input);
+      border-radius: 20px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 14px;
+      width: 190px;
+    }
+
+    .nav-center {
+      display: flex;
+      gap: 8px;
+      height: 100%;
+    }
+
+    .nav-tab {
+      width: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: background 0.15s;
+    }
+
+    .nav-tab:hover {
+      background: var(--bg-hover);
+      border-radius: 8px;
+    }
+
+    .nav-tab.active {
+      color: var(--blue-primary);
+      border-bottom: 3px solid var(--blue-primary);
+      border-radius: 0;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px 4px 4px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .user-pill:hover {
+      background: var(--bg-hover);
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1877f2, #42b72a);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Layout Grid */
+    .main-container {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 620px) 280px;
+      justify-content: space-between;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      gap: 20px;
+    }
+
+    /* Sidebars */
+    .sidebar {
+      position: sticky;
+      top: 76px;
+      height: calc(100vh - 96px);
+      overflow-y: auto;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .sidebar-item:hover {
+      background: #e4e6eb;
+    }
+
+    .sidebar-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e7f3ff;
+      color: var(--blue-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .sidebar-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      padding: 8px 12px;
+    }
+
+    .contact-status {
+      position: relative;
+    }
+
+    .online-dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green-online);
+      border: 2px solid #fff;
+    }
+
+    /* Center Feed */
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      box-shadow: var(--shadow-card);
+      padding: 14px 16px;
+    }
+
+    /* Stories Row */
+    .stories {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .story-card {
+      height: 160px;
+      border-radius: 10px;
+      padding: 12px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.15s;
+    }
+
+    .story-card:hover {
+      transform: scale(1.02);
+    }
+
+    /* Post Composer */
+    .composer-top {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e4e6eb;
+    }
+
+    .composer-input-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .composer-input-wrap textarea {
+      width: 100%;
+      border: none;
+      background: var(--bg-input);
+      border-radius: 18px;
+      padding: 10px 14px;
+      font-size: 15px;
+      resize: none;
+      outline: none;
+      min-height: 44px;
+    }
+
+    .composer-input-wrap input[type="url"] {
+      width: 100%;
+      border: 1px solid #e4e6eb;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      outline: none;
+      display: none;
+    }
+
+    .composer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .post-btn {
+      background: var(--blue-primary);
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .post-btn:hover {
+      background: var(--blue-hover);
+    }
+
+    /* Post Card */
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .post-author-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .post-author-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .post-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .delete-post {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 8px;
+      border-radius: 50%;
+    }
+
+    .delete-post:hover {
+      background: var(--bg-hover);
+    }
+
+    .post-content {
+      font-size: 15px;
+      line-height: 1.45;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+    }
+
+    .post-image {
+      width: calc(100% + 32px);
+      margin-left: -16px;
+      max-height: 420px;
+      object-fit: cover;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .post-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e4e6eb;
+    }
+
+    .post-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding-top: 4px;
+    }
+
+    .post-buttons button {
+      background: transparent;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .post-buttons button:hover {
+      background: var(--bg-hover);
+    }
+
+    .post-buttons button.liked {
+      color: var(--blue-primary);
+    }
+
+    /* Comments Section */
+    .comments-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e4e6eb;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .comment-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .comment-bubble {
+      background: var(--bg-input);
+      border-radius: 16px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .comment-author {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .comment-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .comment-form input {
+      flex: 1;
+      border: none;
+      background: var(--bg-input);
+      border-radius: 18px;
+      padding: 8px 14px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    @media (max-width: 1024px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        max-width: 620px;
+      }
+      .sidebar, .nav-center {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello from Railway!</h1>
-</body>
-</html>
+
+  <!-- Top Bar -->
+  <header class="navbar">
+    <div class="nav-left">
+      <a href="#" class="logo">f</a>
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="Search posts..." oninput="renderPosts()" />
+      </div>
+    </div>
+
+    <nav class="nav-center">
+      <div class="nav-tab active" onclick="filterFeed('all', this)">Home</div>
+      <div class="nav-tab" onclick="filterFeed('liked', this)">Liked</div>
+      <div class="nav-tab" onclick="filterFeed('mine', this)">My Posts</div>
+    </nav>
+
+    <div class="nav-right">
+      <div class="user-pill">
+        <div class="avatar">FG</div>
+        <span>Froi</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main 3-Column Layout -->
+  <div class="main-container">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-item">
+        <div class="avatar">FG</div>
+        <span>Froi</span>
+      </div>
+      <div class="sidebar-item" onclick="filterFeed('all')">
+        <div class="sidebar-icon">📰</div>
+        <span>News Feed</span>
+      </div>
+      <div class="sidebar-item" onclick="filterFeed('liked')">
+        <div class="sidebar-icon">👍</div>
+        <span>Liked Posts</span>
+      </div>
+      <div class="sidebar-item" onclick="resetDemoData()">
+        <div class="sidebar-icon">🔄</div>
+        <span>Reset Demo Feed</span>
+      </div>
+    </aside>
+
+    <!-- Center Feed -->
+    <main class="feed">
+      <!-- Stories -->
+      <section class="stories">
+        <div class="story-card" style="background: linear-gradient(160deg, #1877f2, #0d47a1);">
+          <div class="avatar" style="background:#fff; color:#1877f2;">+</div>
+          <span>Create Story</span>
+        </div>
+        <div class="story-card" style="background: linear-gradient(160deg, #00b09b, #96c93d);">
+          <div class="avatar">R</div>
+          <span>Railway Cloud</span>
+        </div>
+        <div class="story-card" style="background: linear-gradient(160deg, #ff512f, #dd2476);">
+          <div class="avatar">N</div>
+          <span>Node.js Live</span>
+        </div>
+        <div class="story-card" style="background: linear-gradient(160deg, #6a11cb, #2575fc);">
+          <div class="avatar">G</div>
+          <span>GitHub Sync</span>
+        </div>
+      </section>
+
+      <!-- Create Post Card -->
+      <section class="card">
+        <div class="composer-top">
+          <div class="avatar">FG</div>
+          <div class="composer-input-wrap">
+            <textarea id="postText" rows="2" placeholder="What's on your mind, Froi?"></textarea>
+            <input type="url" id="postImageUrl" placeholder="Paste an image URL (optional)..." />
+          </div>
+        </div>
+        <div class="composer-actions">
+          <button class="action-btn" type="button" onclick="toggleImageInput()">🖼️ Photo URL</button>
+          <button class="post-btn" type="button" onclick="createPost()">Post</button>
+        </div>
+      </section>
+
+      <!-- Posts Container -->
+      <section id="postsContainer" class="feed"></section>
+    </main>
+
+    <!-- Right Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Active Deployments</div>
+      <div class="sidebar-item">
+        <div class="contact-status">
+          <div class="avatar" style="background:#1877f2;">R</div>
+          <span class="online-dot"></span>
+        </div>
+        <span>Railway Server</span>
+      </div>
+      <div class="sidebar-item">
+        <div class="contact-status">
+          <div class="avatar" style="background:#24292e;">GH</div>
+          <span class="online-dot"></span>
+        </div>
+        <span>GitHub Repo</span>
+      </div>
+      <div class="sidebar-item">
+        <div class="contact-status">
+          <div class="avatar" style="background:#3c873a;">JS</div>
+          <span class="online-dot"></span>
+        </div>
+        <span>Express Backend</span>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const defaultPosts = [
+      {
+        id: 1,
+        author: "Froi",
+        initials: "FG",
+        isMine: true,
+        time: "Just now",
+        text: "Deployed my first Facebook-style web app from VS Code to GitHub and Railway! 🚀",
+        image: "",
+        likes: 12,
+        liked: false,
+        comments: [
+          { author: "Railway Bot", text: "Build succeeded and live on your Railway domain!" }
+        ]
+      },
+      {
+        id: 2,
+        author: "Web Dev Updates",
+        initials: "WD",
+        isMine: false,
+        time: "2 hrs ago",
+        text: "Tip: Try posting a status update above, adding an image URL, liking posts, or leaving comments below. Everything saves automatically in your browser.",
+        image: "",
+        likes: 28,
+        liked: true,
+        comments: []
+      }
+    ];
+
+    let posts = JSON.parse(localStorage.getItem("socialbook_posts")) || defaultPosts;
+    let currentFilter = "all";
+
+    function savePosts() {
+      localStorage.setItem("socialbook_posts", JSON.stringify(posts));
+    }
+
+    function toggleImageInput() {
+      const input = document.getElementById("postImageUrl");
+      input.style.display = input.style.display === "block" ? "none" : "block";
+      if (input.style.display === "block") input.focus();
+    }
+
+    function createPost() {
+      const textEl = document.getElementById("postText");
+      const imgEl = document.getElementById("postImageUrl");
+      const text = textEl.value.trim();
+      const image = imgEl.value.trim();
+
+      if (!text && !image) return;
+
+      const newPost = {
+        id: Date.now(),
+        author: "Froi",
+        initials: "FG",
+        isMine: true,
+        time: "Just
