@@ -8,137 +8,97 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Use DATABASE_URL (or DATABASE_PUBLIC_URL as fallback)
 const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
-
 const pool = new Pool({
   connectionString: dbUrl,
-  ssl: dbUrl && !dbUrl.includes('railway.internal')
-    ? { rejectUnauthorized: false }
-    : false
+  ssl: dbUrl && !dbUrl.includes('railway.internal') ? { rejectUnauthorized: false } : false
 });
 
 async function initDB() {
   if (!dbUrl) {
-    console.error('ERROR: DATABASE_URL is missing in Railway Variables!');
+    console.error('WARNING: DATABASE_URL is not linked in Railway Variables.');
     return;
   }
 
   try {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS students (
+      CREATE TABLE IF NOT EXISTS orders (
         id SERIAL PRIMARY KEY,
-        student_id VARCHAR(30) UNIQUE NOT NULL,
-        full_name VARCHAR(120) NOT NULL,
-        grade_section VARCHAR(60) NOT NULL,
+        order_ref VARCHAR(20) UNIQUE NOT NULL,
+        customer_name VARCHAR(120) NOT NULL,
+        phone VARCHAR(40) NOT NULL,
+        address TEXT NOT NULL,
+        payment_method VARCHAR(60) NOT NULL,
+        items JSONB NOT NULL,
+        total_amount INT NOT NULL,
+        status VARCHAR(30) DEFAULT 'Pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS attendance (
-        id SERIAL PRIMARY KEY,
-        student_db_id INT REFERENCES students(id) ON DELETE CASCADE,
-        att_date DATE NOT NULL,
-        status VARCHAR(20) NOT NULL,
-        time_in VARCHAR(20),
-        remarks TEXT DEFAULT '',
-        UNIQUE(student_db_id, att_date)
-      );
-    `);
-
-    const countRes = await pool.query('SELECT COUNT(*) FROM students');
-    if (parseInt(countRes.rows[0].count, 10) === 0) {
-      await pool.query(`
-        INSERT INTO students (student_id, full_name, grade_section) VALUES
-        ('2026-001', 'Juan Dela Cruz', 'Grade 12 - Rizal'),
-        ('2026-002', 'Maria Clara Santos', 'Grade 12 - Rizal'),
-        ('2026-003', 'Gabriel Reyes', 'Grade 12 - Bonifacio'),
-        ('2026-004', 'Andrea Mendoza', 'Grade 12 - Bonifacio')
-      `);
-    }
-
-    console.log('Connected to Postgres & tables initialized!');
+    console.log('Connected to Postgres & Clikcdown orders table ready.');
   } catch (err) {
-    console.error('Database init failed:', err.message);
+    console.error('Database init error:', err.message);
   }
 }
 
-app.get('/api/attendance', async (req, res) => {
-  if (!dbUrl) return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
-  const date = req.query.date || new Date().toISOString().split('T')[0];
+// POST: Save a new customer order
+app.post('/api/orders', async (req, res) => {
+  if (!dbUrl) {
+    return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
+  }
+  const { order_ref, customer_name, phone, address, payment_method, items, total_amount } = req.body;
+
   try {
     const result = await pool.query(
-      `SELECT 
-         s.id,
-         s.student_id,
-         s.full_name,
-         s.grade_section,
-         COALESCE(a.status, 'Unmarked') AS status,
-         COALESCE(a.time_in, '--:--') AS time_in,
-         COALESCE(a.remarks, '') AS remarks
-       FROM students s
-       LEFT JOIN attendance a 
-         ON s.id = a.student_db_id AND a.att_date = $1
-       ORDER BY s.grade_section ASC, s.full_name ASC`,
-      [date]
+      `INSERT INTO orders (order_ref, customer_name, phone, address, payment_method, items, total_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [order_ref, customer_name, phone, address, payment_method, JSON.stringify(items), total_amount]
     );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET: Fetch all orders
+app.get('/api/orders', async (req, res) => {
+  if (!dbUrl) {
+    return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
+  }
+  try {
+    const result = await pool.query('SELECT * FROM orders ORDER BY id DESC');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Database query error' });
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/students', async (req, res) => {
-  if (!dbUrl) return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
-  const { student_id, full_name, grade_section } = req.body;
-  if (!student_id || !full_name || !grade_section) {
-    return res.status(400).json({ error: 'All fields are required.' });
-  }
+// PATCH: Update order status (Pending -> Shipped -> Delivered)
+app.patch('/api/orders/:id', async (req, res) => {
+  const { status } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO students (student_id, full_name, grade_section) VALUES ($1, $2, $3) RETURNING *',
-      [student_id.trim(), full_name.trim(), grade_section.trim()]
+      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+      [status, req.params.id]
     );
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(400).json({ error: err.message || 'Failed to insert student' });
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.delete('/api/students/:id', async (req, res) => {
+// DELETE: Remove an order
+app.delete('/api/orders/:id', async (req, res) => {
   try {
-    await pool.query('DELETE FROM students WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM orders WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to delete student' });
-  }
-});
-
-app.post('/api/attendance', async (req, res) => {
-  const { student_db_id, att_date, status, remarks } = req.body;
-  const nowTime =
-    status === 'Present' || status === 'Late'
-      ? new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      : '--:--';
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO attendance (student_db_id, att_date, status, time_in, remarks)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (student_db_id, att_date)
-       DO UPDATE SET status = EXCLUDED.status, time_in = EXCLUDED.time_in, remarks = EXCLUDED.remarks
-       RETURNING *`,
-      [student_db_id, att_date, status, nowTime, remarks || '']
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to mark attendance' });
+    res.status(500).json({ error: err.message });
   }
 });
 
 initDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`Attendance server running on port ${PORT}`);
+    console.log(`Clikcdown server running on port ${PORT}`);
   });
 });
