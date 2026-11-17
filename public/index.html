@@ -3,788 +3,496 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialBook — Railway Edition</title>
+  <title>School Attendance System</title>
   <style>
     :root {
-      --bg-body: #f0f2f5;
-      --bg-card: #ffffff;
-      --bg-hover: #f2f3f5;
-      --bg-input: #f0f2f5;
-      --blue-primary: #1877f2;
-      --blue-hover: #166fe5;
-      --green-online: #31a24c;
-      --text-primary: #050505;
-      --text-secondary: #65676b;
-      --border-color: #ced0d4;
-      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.1);
+      --primary: #1e40af;
+      --primary-light: #eff6ff;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --present: #16a34a;
+      --late: #d97706;
+      --absent: #dc2626;
+      --excused: #2563eb;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
-      background-color: var(--bg-body);
-      color: var(--text-primary);
+      background: var(--bg);
+      color: var(--text);
     }
 
-    /* Top Navigation Bar */
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      height: 56px;
-      background: var(--bg-card);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    /* Top Header */
+    .topbar {
+      background: var(--primary);
+      color: #fff;
+      padding: 16px 24px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
-    }
-
-    .nav-left {
-      display: flex;
       align-items: center;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     }
 
-    .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--blue-primary);
-      color: #fff;
-      font-size: 28px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-    }
-
-    .search-box {
-      background: var(--bg-input);
-      border-radius: 20px;
-      padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .search-box input {
-      border: none;
-      background: transparent;
-      outline: none;
-      font-size: 14px;
-      width: 190px;
-    }
-
-    .nav-center {
-      display: flex;
-      gap: 8px;
-      height: 100%;
-    }
-
-    .nav-tab {
-      width: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: background 0.15s;
-    }
-
-    .nav-tab:hover {
-      background: var(--bg-hover);
-      border-radius: 8px;
-    }
-
-    .nav-tab.active {
-      color: var(--blue-primary);
-      border-bottom: 3px solid var(--blue-primary);
-      border-radius: 0;
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px 4px 4px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .user-pill:hover {
-      background: var(--bg-hover);
-    }
-
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #1877f2, #42b72a);
-      color: #fff;
+    .topbar h1 {
+      font-size: 20px;
       font-weight: 700;
-      font-size: 14px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      gap: 10px;
     }
 
-    /* Layout Grid */
-    .main-container {
-      display: grid;
-      grid-template-columns: 280px minmax(0, 620px) 280px;
-      justify-content: space-between;
-      max-width: 1380px;
-      margin: 0 auto;
-      padding: 20px 16px;
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar input[type="date"] {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-white {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
       gap: 20px;
     }
 
-    /* Sidebars */
-    .sidebar {
-      position: sticky;
-      top: 76px;
-      height: calc(100vh - 96px);
-      overflow-y: auto;
-    }
-
-    .sidebar-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .sidebar-item:hover {
-      background: #e4e6eb;
-    }
-
-    .sidebar-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #e7f3ff;
-      color: var(--blue-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-
-    .sidebar-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      padding: 8px 12px;
-    }
-
-    .contact-status {
-      position: relative;
-    }
-
-    .online-dot {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--green-online);
-      border: 2px solid #fff;
-    }
-
-    /* Center Feed */
-    .feed {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .card {
-      background: var(--bg-card);
-      border-radius: 10px;
-      box-shadow: var(--shadow-card);
-      padding: 14px 16px;
-    }
-
-    /* Stories Row */
-    .stories {
+    /* Summary Stat Cards */
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
     }
 
-    .story-card {
-      height: 160px;
+    .stat-card {
+      background: var(--card);
       border-radius: 10px;
-      padding: 12px;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      box-shadow: var(--shadow-card);
-      transition: transform 0.15s;
+      padding: 16px;
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     }
 
-    .story-card:hover {
-      transform: scale(1.02);
-    }
+    .stat-card.present { border-left-color: var(--present); }
+    .stat-card.late { border-left-color: var(--late); }
+    .stat-card.absent { border-left-color: var(--absent); }
+    .stat-card.excused { border-left-color: var(--excused); }
 
-    /* Post Composer */
-    .composer-top {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e4e6eb;
-    }
-
-    .composer-input-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .composer-input-wrap textarea {
-      width: 100%;
-      border: none;
-      background: var(--bg-input);
-      border-radius: 18px;
-      padding: 10px 14px;
-      font-size: 15px;
-      resize: none;
-      outline: none;
-      min-height: 44px;
-    }
-
-    .composer-input-wrap input[type="url"] {
-      width: 100%;
-      border: 1px solid #e4e6eb;
-      border-radius: 8px;
-      padding: 7px 12px;
-      font-size: 13px;
-      outline: none;
-      display: none;
-    }
-
-    .composer-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 10px;
-    }
-
-    .action-btn {
-      background: transparent;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .action-btn:hover {
-      background: var(--bg-hover);
-    }
-
-    .post-btn {
-      background: var(--blue-primary);
-      color: #fff;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .post-btn:hover {
-      background: var(--blue-hover);
-    }
-
-    /* Post Card */
-    .post-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .post-author-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .post-author-name {
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .post-time {
+    .stat-label {
       font-size: 12px;
-      color: var(--text-secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
-    .delete-post {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 16px;
-      padding: 4px 8px;
-      border-radius: 50%;
-    }
-
-    .delete-post:hover {
-      background: var(--bg-hover);
-    }
-
-    .post-content {
-      font-size: 15px;
-      line-height: 1.45;
-      margin-bottom: 10px;
-      white-space: pre-wrap;
-    }
-
-    .post-image {
-      width: calc(100% + 32px);
-      margin-left: -16px;
-      max-height: 420px;
-      object-fit: cover;
-      margin-bottom: 10px;
-      display: block;
-    }
-
-    .post-stats {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      color: var(--text-secondary);
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e4e6eb;
-    }
-
-    .post-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      padding-top: 4px;
-    }
-
-    .post-buttons button {
-      background: transparent;
-      border: none;
-      padding: 8px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-secondary);
-      cursor: pointer;
-    }
-
-    .post-buttons button:hover {
-      background: var(--bg-hover);
-    }
-
-    .post-buttons button.liked {
-      color: var(--blue-primary);
-    }
-
-    /* Comments Section */
-    .comments-section {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #e4e6eb;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .comment-item {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    .comment-bubble {
-      background: var(--bg-input);
-      border-radius: 16px;
-      padding: 8px 12px;
-      font-size: 13px;
-    }
-
-    .comment-author {
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .comment-form {
-      display: flex;
-      gap: 8px;
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
       margin-top: 4px;
     }
 
-    .comment-form input {
-      flex: 1;
-      border: none;
-      background: var(--bg-input);
-      border-radius: 18px;
-      padding: 8px 14px;
-      font-size: 13px;
+    /* Panel Card */
+    .panel {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* Add Student Form */
+    .add-form {
+      display: grid;
+      grid-template-columns: 160px 1fr 220px auto;
+      gap: 10px;
+    }
+
+    .add-form input, .filter-bar input, .filter-bar select {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
       outline: none;
     }
 
-    @media (max-width: 1024px) {
-      .main-container {
+    .add-form input:focus, .filter-bar input:focus {
+      border-color: var(--primary);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-Present { background: #dcfce7; color: #15803d; }
+    .badge-Late { background: #fef3c7; color: #b45309; }
+    .badge-Absent { background: #fee2e2; color: #b91c1c; }
+    .badge-Excused { background: #dbeafe; color: #1d4ed8; }
+    .badge-Unmarked { background: #f1f5f9; color: #475569; }
+
+    /* Quick Action Pills */
+    .status-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .pill-btn:hover { background: #f1f5f9; }
+    .pill-btn.p:hover { background: #dcfce7; border-color: #16a34a; color: #15803d; }
+    .pill-btn.l:hover { background: #fef3c7; border-color: #d97706; color: #b45309; }
+    .pill-btn.a:hover { background: #fee2e2; border-color: #dc2626; color: #b91c1c; }
+    .pill-btn.e:hover { background: #dbeafe; border-color: #2563eb; color: #1d4ed8; }
+
+    .del-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 15px;
+      padding: 4px 8px;
+    }
+
+    .del-btn:hover { color: #dc2626; }
+
+    @media (max-width: 768px) {
+      .add-form {
         grid-template-columns: 1fr;
-        max-width: 620px;
-      }
-      .sidebar, .nav-center {
-        display: none;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Bar -->
-  <header class="navbar">
-    <div class="nav-left">
-      <a href="#" class="logo">f</a>
-      <div class="search-box">
-        <span>🔍</span>
-        <input type="text" id="searchInput" placeholder="Search posts..." oninput="renderPosts()" />
-      </div>
-    </div>
-
-    <nav class="nav-center">
-      <div class="nav-tab active" onclick="filterFeed('all', this)">Home</div>
-      <div class="nav-tab" onclick="filterFeed('liked', this)">Liked</div>
-      <div class="nav-tab" onclick="filterFeed('mine', this)">My Posts</div>
-    </nav>
-
-    <div class="nav-right">
-      <div class="user-pill">
-        <div class="avatar">FG</div>
-        <span>Froi</span>
-      </div>
+  <header class="topbar">
+    <h1>🎓 School Attendance Portal</h1>
+    <div class="topbar-controls">
+      <label for="attDate" style="font-size:13px; font-weight:600;">Date:</label>
+      <input type="date" id="attDate" onchange="loadAttendance()" />
+      <button class="btn btn-white" onclick="exportCSV()">⬇ Export CSV</button>
     </div>
   </header>
 
-  <!-- Main 3-Column Layout -->
-  <div class="main-container">
-    <!-- Left Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-item">
-        <div class="avatar">FG</div>
-        <span>Froi</span>
+  <main class="container">
+    <!-- Summary Counters -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" id="statTotal">0</div>
       </div>
-      <div class="sidebar-item" onclick="filterFeed('all')">
-        <div class="sidebar-icon">📰</div>
-        <span>News Feed</span>
+      <div class="stat-card present">
+        <div class="stat-label">Present</div>
+        <div class="stat-value" id="statPresent">0</div>
       </div>
-      <div class="sidebar-item" onclick="filterFeed('liked')">
-        <div class="sidebar-icon">👍</div>
-        <span>Liked Posts</span>
+      <div class="stat-card late">
+        <div class="stat-label">Late</div>
+        <div class="stat-value" id="statLate">0</div>
       </div>
-      <div class="sidebar-item" onclick="resetDemoData()">
-        <div class="sidebar-icon">🔄</div>
-        <span>Reset Demo Feed</span>
+      <div class="stat-card absent">
+        <div class="stat-label">Absent</div>
+        <div class="stat-value" id="statAbsent">0</div>
       </div>
-    </aside>
+      <div class="stat-card excused">
+        <div class="stat-label">Excused</div>
+        <div class="stat-value" id="statExcused">0</div>
+      </div>
+    </section>
 
-    <!-- Center Feed -->
-    <main class="feed">
-      <!-- Stories -->
-      <section class="stories">
-        <div class="story-card" style="background: linear-gradient(160deg, #1877f2, #0d47a1);">
-          <div class="avatar" style="background:#fff; color:#1877f2;">+</div>
-          <span>Create Story</span>
-        </div>
-        <div class="story-card" style="background: linear-gradient(160deg, #00b09b, #96c93d);">
-          <div class="avatar">R</div>
-          <span>Railway Cloud</span>
-        </div>
-        <div class="story-card" style="background: linear-gradient(160deg, #ff512f, #dd2476);">
-          <div class="avatar">N</div>
-          <span>Node.js Live</span>
-        </div>
-        <div class="story-card" style="background: linear-gradient(160deg, #6a11cb, #2575fc);">
-          <div class="avatar">G</div>
-          <span>GitHub Sync</span>
-        </div>
-      </section>
-
-      <!-- Create Post Card -->
-      <section class="card">
-        <div class="composer-top">
-          <div class="avatar">FG</div>
-          <div class="composer-input-wrap">
-            <textarea id="postText" rows="2" placeholder="What's on your mind, Froi?"></textarea>
-            <input type="url" id="postImageUrl" placeholder="Paste an image URL (optional)..." />
-          </div>
-        </div>
-        <div class="composer-actions">
-          <button class="action-btn" type="button" onclick="toggleImageInput()">🖼️ Photo URL</button>
-          <button class="post-btn" type="button" onclick="createPost()">Post</button>
-        </div>
-      </section>
-
-      <!-- Posts Container -->
-      <section id="postsContainer" class="feed"></section>
-    </main>
-
-    <!-- Right Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-title">Active Deployments</div>
-      <div class="sidebar-item">
-        <div class="contact-status">
-          <div class="avatar" style="background:#1877f2;">R</div>
-          <span class="online-dot"></span>
-        </div>
-        <span>Railway Server</span>
+    <!-- Register New Student -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Register Student</div>
       </div>
-      <div class="sidebar-item">
-        <div class="contact-status">
-          <div class="avatar" style="background:#24292e;">GH</div>
-          <span class="online-dot"></span>
+      <form class="add-form" onsubmit="addStudent(event)">
+        <input type="text" id="newStudentId" placeholder="Student ID (e.g. 2026-005)" required />
+        <input type="text" id="newFullName" placeholder="Full Name (e.g. Jose Rizal)" required />
+        <input type="text" id="newSection" placeholder="Grade & Section" required />
+        <button type="submit" class="btn btn-primary">+ Add Student</button>
+      </form>
+    </section>
+
+    <!-- Daily Roll Call Table -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Daily Roll Call</div>
+        <div class="filter-bar">
+          <input type="text" id="searchInput" placeholder="Search name or ID..." oninput="renderTable()" />
+          <select id="sectionFilter" onchange="renderTable()">
+            <option value="ALL">All Sections</option>
+          </select>
+          <select id="statusFilter" onchange="renderTable()">
+            <option value="ALL">All Statuses</option>
+            <option value="Present">Present</option>
+            <option value="Late">Late</option>
+            <option value="Absent">Absent</option>
+            <option value="Excused">Excused</option>
+            <option value="Unmarked">Unmarked</option>
+          </select>
         </div>
-        <span>GitHub Repo</span>
       </div>
-      <div class="sidebar-item">
-        <div class="contact-status">
-          <div class="avatar" style="background:#3c873a;">JS</div>
-          <span class="online-dot"></span>
-        </div>
-        <span>Express Backend</span>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Full Name</th>
+              <th>Grade & Section</th>
+              <th>Time In</th>
+              <th>Status</th>
+              <th>Mark Attendance</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="attendanceBody">
+            <tr><td colspan="7" style="text-align:center; color:#64748b;">Loading students...</td></tr>
+          </tbody>
+        </table>
       </div>
-    </aside>
-  </div>
+    </section>
+  </main>
 
   <script>
-    const defaultPosts = [
-      {
-        id: 1,
-        author: "Froi",
-        initials: "FG",
-        isMine: true,
-        time: "Just now",
-        text: "Deployed my first Facebook-style web app from VS Code to GitHub and Railway! 🚀",
-        image: "",
-        likes: 12,
-        liked: false,
-        comments: [
-          { author: "Railway Bot", text: "Build succeeded and live on your Railway domain!" }
-        ]
-      },
-      {
-        id: 2,
-        author: "Web Dev Updates",
-        initials: "WD",
-        isMine: false,
-        time: "2 hrs ago",
-        text: "Tip: Try posting a status update above, adding an image URL, liking posts, or leaving comments below. Everything saves automatically in your browser.",
-        image: "",
-        likes: 28,
-        liked: true,
-        comments: []
-      }
-    ];
+    let records = [];
 
-    let posts = JSON.parse(localStorage.getItem("socialbook_posts")) || defaultPosts;
-    let currentFilter = "all";
+    // Default date picker to today
+    const dateInput = document.getElementById('attDate');
+    dateInput.value = new Date().toISOString().split('T')[0];
 
-    function savePosts() {
-      localStorage.setItem("socialbook_posts", JSON.stringify(posts));
+    async function loadAttendance() {
+      const date = dateInput.value;
+      const res = await fetch(`/api/attendance?date=${encodeURIComponent(date)}`);
+      records = await res.json();
+      updateSectionDropdown();
+      updateStats();
+      renderTable();
     }
 
-    function toggleImageInput() {
-      const input = document.getElementById("postImageUrl");
-      input.style.display = input.style.display === "block" ? "none" : "block";
-      if (input.style.display === "block") input.focus();
+    function updateSectionDropdown() {
+      const select = document.getElementById('sectionFilter');
+      const current = select.value;
+      const sections = [...new Set(records.map(r => r.grade_section))];
+      select.innerHTML = `<option value="ALL">All Sections</option>` +
+        sections.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('');
+      if (sections.includes(current)) select.value = current;
     }
 
-    function createPost() {
-      const textEl = document.getElementById("postText");
-      const imgEl = document.getElementById("postImageUrl");
-      const text = textEl.value.trim();
-      const image = imgEl.value.trim();
-
-      if (!text && !image) return;
-
-      const newPost = {
-        id: Date.now(),
-        author: "Froi",
-        initials: "FG",
-        isMine: true,
-        time: "Just now",
-        text,
-        image,
-        likes: 0,
-        liked: false,
-        comments: []
-      };
-
-      posts.unshift(newPost);
-      savePosts();
-      textEl.value = "";
-      imgEl.value = "";
-      imgEl.style.display = "none";
-      renderPosts();
+    function updateStats() {
+      document.getElementById('statTotal').textContent = records.length;
+      document.getElementById('statPresent').textContent = records.filter(r => r.status === 'Present').length;
+      document.getElementById('statLate').textContent = records.filter(r => r.status === 'Late').length;
+      document.getElementById('statAbsent').textContent = records.filter(r => r.status === 'Absent').length;
+      document.getElementById('statExcused').textContent = records.filter(r => r.status === 'Excused').length;
     }
 
-    function toggleLike(id) {
-      const post = posts.find(p => p.id === id);
-      if (!post) return;
-      post.liked = !post.liked;
-      post.likes += post.liked ? 1 : -1;
-      savePosts();
-      renderPosts();
+    async function markStatus(studentDbId, status) {
+      await fetch('/api/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_db_id: studentDbId,
+          att_date: dateInput.value,
+          status
+        })
+      });
+      loadAttendance();
     }
 
-    function addComment(event, id) {
+    async function addStudent(event) {
       event.preventDefault();
-      const input = event.target.querySelector("input");
-      const commentText = input.value.trim();
-      if (!commentText) return;
+      const student_id = document.getElementById('newStudentId').value;
+      const full_name = document.getElementById('newFullName').value;
+      const grade_section = document.getElementById('newSection').value;
 
-      const post = posts.find(p => p.id === id);
-      if (!post) return;
-
-      post.comments.push({ author: "Froi", text: commentText });
-      savePosts();
-      renderPosts();
-    }
-
-    function deletePost(id) {
-      posts = posts.filter(p => p.id !== id);
-      savePosts();
-      renderPosts();
-    }
-
-    function filterFeed(filter, tabEl) {
-      currentFilter = filter;
-      if (tabEl) {
-        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-        tabEl.classList.add("active");
-      }
-      renderPosts();
-    }
-
-    function resetDemoData() {
-      posts = [...defaultPosts];
-      savePosts();
-      renderPosts();
-    }
-
-    function escapeHTML(str) {
-      return str.replace(/[&<>"']/g, m => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[m]));
-    }
-
-    function renderPosts() {
-      const container = document.getElementById("postsContainer");
-      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
-
-      const filtered = posts.filter(post => {
-        const matchesSearch =
-          post.text.toLowerCase().includes(searchQuery) ||
-          post.author.toLowerCase().includes(searchQuery);
-        if (!matchesSearch) return false;
-        if (currentFilter === "liked") return post.liked;
-        if (currentFilter === "mine") return post.isMine;
-        return true;
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_id, full_name, grade_section })
       });
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="card" style="text-align:center; color:#65676b;">No posts found in this view.</div>`;
+      if (!res.ok) {
+        const err = await res.json();
+        alert('Error: ' + (err.error || 'Could not add student'));
         return;
       }
 
-      container.innerHTML = filtered.map(post => `
-        <article class="card">
-          <div class="post-header">
-            <div class="post-author-info">
-              <div class="avatar">${escapeHTML(post.initials)}</div>
-              <div>
-                <div class="post-author-name">${escapeHTML(post.author)}</div>
-                <div class="post-time">${escapeHTML(post.time)} · 🌐</div>
-              </div>
-            </div>
-            <button class="delete-post" title="Delete post" onclick="deletePost(${post.id})">✕</button>
-          </div>
-
-          ${post.text ? `<div class="post-content">${escapeHTML(post.text)}</div>` : ""}
-          ${post.image ? `<img class="post-image" src="${escapeHTML(post.image)}" alt="Post attachment" onerror="this.style.display='none'" />` : ""}
-
-          <div class="post-stats">
-            <span>👍 ${post.likes} ${post.likes === 1 ? "Like" : "Likes"}</span>
-            <span>${post.comments.length} ${post.comments.length === 1 ? "Comment" : "Comments"}</span>
-          </div>
-
-          <div class="post-buttons">
-            <button class="${post.liked ? "liked" : ""}" onclick="toggleLike(${post.id})">
-              ${post.liked ? "👍 Liked" : "👍 Like"}
-            </button>
-            <button onclick="document.getElementById('comment-input-${post.id}').focus()">
-              💬 Comment
-            </button>
-          </div>
-
-          <div class="comments-section">
-            ${post.comments.map(c => `
-              <div class="comment-item">
-                <div class="avatar" style="width:28px; height:28px; font-size:11px;">${escapeHTML(c.author[0])}</div>
-                <div class="comment-bubble">
-                  <div class="comment-author">${escapeHTML(c.author)}</div>
-                  <div>${escapeHTML(c.text)}</div>
-                </div>
-              </div>
-            `).join("")}
-
-            <form class="comment-form" onsubmit="addComment(event, ${post.id})">
-              <div class="avatar" style="width:28px; height:28px; font-size:11px;">FG</div>
-              <input id="comment-input-${post.id}" type="text" placeholder="Write a comment..." />
-            </form>
-          </div>
-        </article>
-      `).join("");
+      event.target.reset();
+      loadAttendance();
     }
 
-    renderPosts();
+    async function deleteStudent(id, name) {
+      if (!confirm(`Remove ${name} from the student roster?`)) return;
+      await fetch(`/api/students/${id}`, { method: 'DELETE' });
+      loadAttendance();
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function renderTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const section = document.getElementById('sectionFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      const filtered = records.filter(r => {
+        const matchSearch = r.full_name.toLowerCase().includes(search) || r.student_id.toLowerCase().includes(search);
+        const matchSection = section === 'ALL' || r.grade_section === section;
+        const matchStatus = status === 'ALL' || r.status === status;
+        return matchSearch && matchSection && matchStatus;
+      });
+
+      const tbody = document.getElementById('attendanceBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b;">No matching student records.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => `
+        <tr>
+          <td><strong>${escapeHTML(r.student_id)}</strong></td>
+          <td>${escapeHTML(r.full_name)}</td>
+          <td>${escapeHTML(r.grade_section)}</td>
+          <td>${escapeHTML(r.time_in)}</td>
+          <td><span class="badge badge-${escapeHTML(r.status)}">${escapeHTML(r.status)}</span></td>
+          <td>
+            <div class="status-actions">
+              <button class="pill-btn p" onclick="markStatus(${r.id}, 'Present')">Present</button>
+              <button class="pill-btn l" onclick="markStatus(${r.id}, 'Late')">Late</button>
+              <button class="pill-btn a" onclick="markStatus(${r.id}, 'Absent')">Absent</button>
+              <button class="pill-btn e" onclick="markStatus(${r.id}, 'Excused')">Excused</button>
+            </div>
+          </td>
+          <td>
+            <button class="del-btn" title="Delete Student" onclick="deleteStudent(${r.id}, '${escapeHTML(r.full_name)}')">✕</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function exportCSV() {
+      const date = dateInput.value;
+      const rows = [['Date', 'Student ID', 'Full Name', 'Grade & Section', 'Time In', 'Status']];
+      records.forEach(r => {
+        rows.push([date, r.student_id, r.full_name, r.grade_section, r.time_in, r.status]);
+      });
+      const csvContent = rows.map(e => e.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `attendance_${date}.csv`;
+      link.click();
+    }
+
+    loadAttendance();
   </script>
 </body>
 </html>
