@@ -439,15 +439,15 @@ app.delete('/api/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // ==================== SETTINGS ====================
-app.get('/api/settings', requireAuth, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM ap_settings');
-    const map = {};
-    result.rows.forEach(r => { map[r.setting_key] = r.setting_value; });
-    res.json(map);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.get('/api/debug', (req, res) => {
+  const pgKeys = Object.keys(process.env).filter(
+    k => k.includes('DATABASE') || k.includes('PG') || k.includes('RAILWAY')
+  );
+  res.json({
+    has_DATABASE_URL: Boolean(process.env.DATABASE_URL),
+    has_DATABASE_PUBLIC_URL: Boolean(process.env.DATABASE_PUBLIC_URL),
+    detected_keys: pgKeys
+  });
 });
 
 app.post('/api/settings', requireAuth, requireAdmin, async (req, res) => {
