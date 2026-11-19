@@ -13,7 +13,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
 const pool = new Pool({
   connectionString: dbUrl,
-  ssl: dbUrl && !dbUrl.includes('railway.internal') ? { rejectUnauthorized: false } : false
+  ssl: dbUrl && !dbUrl.includes('railway.internal')
+    ? { rejectUnauthorized: false }
+    : false
 });
 
 // Helper: Password hashing & verification using built-in Node crypto
@@ -24,6 +26,7 @@ function hashPassword(password) {
 }
 
 function verifyPassword(password, stored) {
+  if (!stored || !stored.includes(':')) return false;
   const [salt, key] = stored.split(':');
   const hashBuffer = crypto.scryptSync(password, salt, 64);
   const keyBuffer = Buffer.from(key, 'hex');
@@ -33,8 +36,8 @@ function verifyPassword(password, stored) {
 // Helper: Philippine Timezone (Asia/Manila) current date & time
 function getManilaDateTime() {
   const now = new Date();
-  const dateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); // YYYY-MM-DD
-  const time24 = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Manila', hour12: false }); // HH:MM:SS
+  const dateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+  const time24 = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Manila', hour12: false });
   const time12 = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit' });
   return { dateStr, time24, time12 };
 }
@@ -65,92 +68,95 @@ async function initDB() {
     return;
   }
 
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ap_users (
-        id SERIAL PRIMARY KEY,
-        full_name VARCHAR(120) NOT NULL,
-        username VARCHAR(60) UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role VARCHAR(20) NOT NULL DEFAULT 'Teacher',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ap_users (
+      id SERIAL PRIMARY KEY,
+      full_name VARCHAR(120) NOT NULL,
+      username VARCHAR(60) UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role VARCHAR(20) NOT NULL DEFAULT 'Teacher',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ap_students (
-        id SERIAL PRIMARY KEY,
-        student_id VARCHAR(40) UNIQUE NOT NULL,
-        full_name VARCHAR(120) NOT NULL,
-        course VARCHAR(80) NOT NULL,
-        year_level VARCHAR(30) NOT NULL,
-        section VARCHAR(50) NOT NULL,
-        contact VARCHAR(60) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ap_students (
+      id SERIAL PRIMARY KEY,
+      student_id VARCHAR(40) UNIQUE NOT NULL,
+      full_name VARCHAR(120) NOT NULL,
+      course VARCHAR(80) NOT NULL,
+      year_level VARCHAR(30) NOT NULL,
+      section VARCHAR(50) NOT NULL,
+      contact VARCHAR(60) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ap_attendance (
-        id SERIAL PRIMARY KEY,
-        student_db_id INT NOT NULL REFERENCES ap_students(id) ON DELETE CASCADE,
-        att_date DATE NOT NULL,
-        time_in VARCHAR(20),
-        status VARCHAR(20) NOT NULL,
-        method VARCHAR(30) DEFAULT 'Manual',
-        recorded_by VARCHAR(100) DEFAULT 'System',
-        UNIQUE(student_db_id, att_date)
-      );
-    `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ap_attendance (
+      id SERIAL PRIMARY KEY,
+      student_db_id INT NOT NULL REFERENCES ap_students(id) ON DELETE CASCADE,
+      att_date DATE NOT NULL,
+      time_in VARCHAR(20),
+      status VARCHAR(20) NOT NULL,
+      method VARCHAR(30) DEFAULT 'Manual',
+      recorded_by VARCHAR(100) DEFAULT 'System',
+      UNIQUE(student_db_id, att_date)
+    );
+  `);
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ap_settings (
-        setting_key VARCHAR(60) PRIMARY KEY,
-        setting_value VARCHAR(255) NOT NULL
-      );
-    `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ap_settings (
+      setting_key VARCHAR(60) PRIMARY KEY,
+      setting_value VARCHAR(255) NOT NULL
+    );
+  `);
 
-    await pool.query(`
-      INSERT INTO ap_settings (setting_key, setting_value) VALUES
-      ('school_name', 'AttendPulse Academy'),
-      ('late_cutoff', '08:00:00')
-      ON CONFLICT (setting_key) DO NOTHING;
-    `);
+  await pool.query(`
+    INSERT INTO ap_settings (setting_key, setting_value) VALUES
+    ('school_name', 'AttendPulse Academy'),
+    ('late_cutoff', '08:00:00')
+    ON CONFLICT (setting_key) DO NOTHING;
+  `);
 
-    const userCount = parseInt((await pool.query('SELECT COUNT(*) FROM ap_users')).rows[0].count, 10);
-    if (userCount === 0) {
-      await pool.query(
-        'INSERT INTO ap_users (full_name, username, password_hash, role) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)',
-        [
-          'System Administrator', 'admin', hashPassword('admin123'), 'Admin',
-          'Prof. Elena Cruz', 'teacher', hashPassword('teacher123'), 'Teacher'
-        ]
-      );
-    }
-
-    const stuCount = parseInt((await pool.query('SELECT COUNT(*) FROM ap_students')).rows[0].count, 10);
-    if (stuCount === 0) {
-      await pool.query(`
-        INSERT INTO ap_students (student_id, full_name, course, year_level, section, contact) VALUES
-        ('2026-1001', 'Juan Miguel Dela Cruz', 'BSIT', '3rd Year', 'A', '0917-555-0101'),
-        ('2026-1002', 'Maria Clara Santos', 'BSCS', '3rd Year', 'A', '0917-555-0102'),
-        ('2026-1003', 'Gabriel Lorenzo Reyes', 'BSIT', '2nd Year', 'B', '0917-555-0103'),
-        ('2026-1004', 'Andrea Nicole Mendoza', 'BSIS', '4th Year', 'A', '0917-555-0104'),
-        ('2026-1005', 'Rafael Antonio Navarro', 'BSCS', '1st Year', 'C', '0917-555-0105')
-      `);
-    }
-
-    console.log('AttendPulse PostgreSQL tables ready.');
-  } catch (err) {
-    console.error('Database init failed:', err.message);
+  const userCount = parseInt((await pool.query('SELECT COUNT(*) FROM ap_users')).rows[0].count, 10);
+  if (userCount === 0) {
+    await pool.query(
+      'INSERT INTO ap_users (full_name, username, password_hash, role) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)',
+      [
+        'System Administrator', 'admin', hashPassword('admin123'), 'Admin',
+        'Prof. Elena Cruz', 'teacher', hashPassword('teacher123'), 'Teacher'
+      ]
+    );
   }
+
+  const stuCount = parseInt((await pool.query('SELECT COUNT(*) FROM ap_students')).rows[0].count, 10);
+  if (stuCount === 0) {
+    await pool.query(`
+      INSERT INTO ap_students (student_id, full_name, course, year_level, section, contact) VALUES
+      ('2026-1001', 'Juan Miguel Dela Cruz', 'BSIT', '3rd Year', 'A', '0917-555-0101'),
+      ('2026-1002', 'Maria Clara Santos', 'BSCS', '3rd Year', 'A', '0917-555-0102'),
+      ('2026-1003', 'Gabriel Lorenzo Reyes', 'BSIT', '2nd Year', 'B', '0917-555-0103'),
+      ('2026-1004', 'Andrea Nicole Mendoza', 'BSIS', '4th Year', 'A', '0917-555-0104'),
+      ('2026-1005', 'Rafael Antonio Navarro', 'BSCS', '1st Year', 'C', '0917-555-0105')
+    `);
+  }
+
+  console.log('AttendPulse PostgreSQL tables ready.');
 }
 
 // ==================== AUTH ROUTES ====================
 app.post('/api/login', async (req, res) => {
+  if (!dbUrl) {
+    return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
+  }
   const { username, password } = req.body;
   try {
-    const result = await pool.query('SELECT * FROM ap_users WHERE username = $1 LIMIT 1', [username?.trim()]);
+    await initDB();
+    const result = await pool.query(
+      'SELECT * FROM ap_users WHERE LOWER(username) = LOWER($1) LIMIT 1',
+      [username?.trim()]
+    );
     const user = result.rows[0];
     if (!user || !verifyPassword(password || '', user.password_hash)) {
       return res.status(401).json({ error: 'Invalid username or password.' });
@@ -160,7 +166,8 @@ app.post('/api/login', async (req, res) => {
     sessions.set(token, sessionUser);
     res.json({ token, user: sessionUser });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Login error:', err);
+    res.status(500).json({ error: err.message || err.code || 'PostgreSQL connection failed' });
   }
 });
 
@@ -190,7 +197,6 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
     const attended = counts.Present + counts.Late;
     const percentage = totalStudents > 0 ? Math.round((attended / totalStudents) * 1000) / 10 : 0;
 
-    // 7-day trend
     const weekly = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000);
@@ -217,7 +223,7 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
 
     res.json({ totalStudents, counts, percentage, weekly, recent: recentRes.rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || 'Dashboard query failed' });
   }
 });
 
@@ -433,27 +439,33 @@ app.delete('/api/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // ==================== SETTINGS ====================
-app.post('/api/login', async (req, res) => {
-  if (!dbUrl) {
-    return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
-  }
-  const { username, password } = req.body;
+app.get('/api/settings', requireAuth, async (req, res) => {
   try {
-    await initDB(); // Ensures tables & default users exist before checking login
-    const result = await pool.query(
-      'SELECT * FROM ap_users WHERE LOWER(username) = LOWER($1) LIMIT 1',
-      [username?.trim()]
-    );
-    const user = result.rows[0];
-    if (!user || !verifyPassword(password || '', user.password_hash)) {
-      return res.status(401).json({ error: 'Invalid username or password.' });
-    }
-    const token = crypto.randomBytes(24).toString('hex');
-    const sessionUser = { id: user.id, full_name: user.full_name, username: user.username, role: user.role };
-    sessions.set(token, sessionUser);
-    res.json({ token, user: sessionUser });
+    const result = await pool.query('SELECT * FROM ap_settings');
+    const map = {};
+    result.rows.forEach(r => { map[r.setting_key] = r.setting_value; });
+    res.json(map);
   } catch (err) {
-    console.error('Login DB Error:', err);
-    res.status(500).json({ error: err.message || err.code || 'PostgreSQL connection failed' });
+    res.status(500).json({ error: err.message });
   }
+});
+
+app.post('/api/settings', requireAuth, requireAdmin, async (req, res) => {
+  const { school_name, late_cutoff } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO ap_settings (setting_key, setting_value) VALUES ('school_name', $1), ('late_cutoff', $2)
+       ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value`,
+      [school_name?.trim() || 'AttendPulse Academy', late_cutoff?.trim() || '08:00:00']
+    );
+    res.json({ message: 'Settings saved!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Start HTTP Server Immediately & Initialize DB
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`AttendPulse Node.js server running on port ${PORT}`);
+  initDB().catch(err => console.error('Initial DB setup error:', err.message));
 });
