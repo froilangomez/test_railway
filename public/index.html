@@ -1,1636 +1,1085 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clikcdown — Everyday Carry & Unisex Footwear</title>
-  <!-- Tailwind CSS CDN -->
+  <title>AttendPulse — Student Attendance Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
   <script>
     tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Plus Jakarta Sans', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              dark: '#0f172a',
-              charcoal: '#1e293b',
-              amber: '#f59e0b',
-              amberHover: '#d97706',
-              slate: '#f8fafc'
-            }
-          }
-        }
-      }
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } }
     }
   </script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    .nav-active {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #ffffff !important;
+      box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.45);
+    }
+    .view-section { animation: fadeSlide 0.25s ease-out; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased selection:bg-amber-400 selection:text-slate-950">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
 
-  <!-- Top Announcement Bar -->
-  <div class="bg-slate-950 text-slate-200 text-xs sm:text-sm py-2 px-4 text-center font-medium tracking-wide">
-    <span>FREE NATIONWIDE SHIPPING ON ORDERS OVER <strong class="text-amber-400">₱2,000</strong></span>
-    <span class="mx-2 text-slate-600">|</span>
-    <span>USE CODE <button onclick="copyPromoCode()" class="underline decoration-amber-400 text-amber-400 font-bold hover:text-amber-300 cursor-pointer" title="Click to copy promo code">CLIKC10</button> FOR 10% OFF</span>
-  </div>
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="loginScreen" class="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"></div>
 
-  <!-- Sticky Main Navigation -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 sm:h-20 gap-4">
-
-        <!-- Brand Logo -->
-        <a href="#" onclick="resetFilters(event)" class="flex items-center gap-2.5 group shrink-0">
-          <div class="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center text-amber-400 shadow-md group-hover:scale-105 transition-transform">
-            <i class="fa-solid fa-arrow-pointer text-lg -rotate-12"></i>
-          </div>
-          <div class="flex flex-col">
-            <span class="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-slate-950 leading-none">
-              CLIKC<span class="text-amber-500">DOWN</span>
-            </span>
-            <span class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mt-0.5">Carry &amp; Footwear</span>
-          </div>
-        </a>
-
-        <!-- Desktop Category Links -->
-        <nav class="hidden lg:flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl">
-          <button onclick="selectCategory('All')" data-nav-cat="All" class="nav-cat-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-slate-950 text-white shadow-sm">
-            All Gear
-          </button>
-          <button onclick="selectCategory('Backpacks')" data-nav-cat="Backpacks" class="nav-cat-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-950 transition-all">
-            Backpacks
-          </button>
-          <button onclick="selectCategory('Sling Bags')" data-nav-cat="Sling Bags" class="nav-cat-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-950 transition-all">
-            Sling Bags
-          </button>
-          <button onclick="selectCategory('Unisex Sandals')" data-nav-cat="Unisex Sandals" class="nav-cat-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-950 transition-all">
-            Unisex Sandals
-          </button>
-          <button onclick="selectCategory('Slippers')" data-nav-cat="Slippers" class="nav-cat-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-950 transition-all">
-            Slippers
-          </button>
-        </nav>
-
-        <!-- Search & Action Icons -->
-        <div class="flex items-center gap-2 sm:gap-2.5 flex-1 lg:flex-initial justify-end">
-          <!-- Search Input -->
-          <div class="relative w-full max-w-[160px] sm:max-w-[210px]">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input
-              type="text"
-              id="searchInput"
-              oninput="handleSearch(this.value)"
-              placeholder="Search gear..."
-              class="w-full pl-9 pr-8 py-2 bg-slate-100 border border-transparent focus:border-slate-300 focus:bg-white rounded-xl text-sm outline-none transition-all"
-            />
-            <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-
-          <!-- Orders History / Admin Button -->
-          <button onclick="toggleOrdersDrawer(true)" aria-label="View Orders" title="View Saved Postgres Orders" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors flex items-center gap-1.5 text-xs font-bold">
-            <i class="fa-solid fa-receipt text-base text-slate-700"></i>
-            <span class="hidden md:inline">Orders</span>
-          </button>
-
-          <!-- Wishlist Button -->
-          <button onclick="toggleWishlistDrawer(true)" aria-label="Open Wishlist" class="relative p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors">
-            <i class="fa-regular fa-heart text-lg"></i>
-            <span id="wishlistBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 text-white text-[11px] font-bold flex items-center justify-center shadow">
-              0
-            </span>
-          </button>
-
-          <!-- Cart Button -->
-          <button onclick="toggleCartDrawer(true)" aria-label="Open Cart" class="relative flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-sm transition-all shadow-sm">
-            <i class="fa-solid fa-bag-shopping text-amber-400"></i>
-            <span class="hidden sm:inline">Cart</span>
-            <span id="cartBadge" class="min-w-[20px] h-5 px-1.5 rounded-full bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center justify-center">
-              0
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Mobile Horizontal Category Bar -->
-      <div class="flex lg:hidden items-center gap-2 overflow-x-auto pb-3 pt-1 no-scrollbar">
-        <button onclick="selectCategory('All')" data-nav-cat="All" class="nav-cat-btn shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-950 text-white">All Gear</button>
-        <button onclick="selectCategory('Backpacks')" data-nav-cat="Backpacks" class="nav-cat-btn shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700">Backpacks</button>
-        <button onclick="selectCategory('Sling Bags')" data-nav-cat="Sling Bags" class="nav-cat-btn shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700">Sling Bags</button>
-        <button onclick="selectCategory('Unisex Sandals')" data-nav-cat="Unisex Sandals" class="nav-cat-btn shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700">Unisex Sandals</button>
-        <button onclick="selectCategory('Slippers')" data-nav-cat="Slippers" class="nav-cat-btn shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700">Slippers</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="relative overflow-hidden bg-slate-950 text-white">
-    <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#f59e0b 1px, transparent 1px); background-size: 28px 28px;"></div>
-    <div class="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-amber-500/20 blur-3xl pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative z-10">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        <div class="lg:col-span-7 space-y-6">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-amber-400 text-xs font-bold uppercase tracking-wider">
-            <i class="fa-solid fa-bolt"></i>
-            <span>2026 Urban Utility Drop</span>
-          </div>
-          <h1 class="font-display font-extrabold text-3xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.1]">
-            Built for Daily Motion. <br/>
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400">
-              Carry Light. Step Bold.
-            </span>
-          </h1>
-          <p class="text-slate-300 text-base sm:text-lg max-w-xl leading-relaxed">
-            Weather-resistant backpacks, quick-access sling bags, all-terrain unisex sandals, and cloud-cushion recovery slippers engineered for everyday city commuters and weekend explorers.
-          </p>
-          <div class="flex flex-wrap items-center gap-3 pt-2">
-            <a href="#catalog" class="px-6 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm sm:text-base transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2">
-              <span>Shop Collection</span>
-              <i class="fa-solid fa-arrow-down"></i>
-            </a>
-            <button onclick="selectCategory('Backpacks'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-sm sm:text-base transition-all">
-              Explore Backpacks
-            </button>
-          </div>
-
-          <!-- Trust Badges -->
-          <div class="grid grid-cols-3 gap-4 pt-6 border-t border-white/10 max-w-lg text-xs sm:text-sm">
-            <div class="flex items-center gap-2 text-slate-300">
-              <i class="fa-solid fa-shield-halved text-amber-400 text-base"></i>
-              <span>Water-Repellent</span>
-            </div>
-            <div class="flex items-center gap-2 text-slate-300">
-              <i class="fa-solid fa-venus-mars text-amber-400 text-base"></i>
-              <span>100% Unisex Fit</span>
-            </div>
-            <div class="flex items-center gap-2 text-slate-300">
-              <i class="fa-solid fa-truck-fast text-amber-400 text-base"></i>
-              <span>COD &amp; GCash Ready</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hero Visual Showcase Cards -->
-        <div class="lg:col-span-5 grid grid-cols-2 gap-4">
-          <div onclick="selectCategory('Backpacks'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="cursor-pointer group rounded-2xl bg-slate-900/90 border border-white/10 p-4 hover:border-amber-400/50 transition-all">
-            <div class="aspect-square rounded-xl overflow-hidden bg-slate-800 mb-3">
-              <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80" alt="Backpacks" onerror="this.src='https://placehold.co/500x500/1e293b/f59e0b?text=Backpacks'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            </div>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-bold text-sm text-white">Backpacks</p>
-                <p class="text-xs text-slate-400">20L – 30L Utility</p>
-              </div>
-              <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-amber-400 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
-                <i class="fa-solid fa-arrow-right text-xs"></i>
-              </span>
-            </div>
-          </div>
-
-          <div onclick="selectCategory('Sling Bags'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="cursor-pointer group rounded-2xl bg-slate-900/90 border border-white/10 p-4 hover:border-amber-400/50 transition-all translate-y-4">
-            <div class="aspect-square rounded-xl overflow-hidden bg-slate-800 mb-3">
-              <img src="https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80" alt="Sling Bags" onerror="this.src='https://placehold.co/500x500/1e293b/f59e0b?text=Sling+Bags'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            </div>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-bold text-sm text-white">Sling Bags</p>
-                <p class="text-xs text-slate-400">Compact EDC</p>
-              </div>
-              <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-amber-400 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
-                <i class="fa-solid fa-arrow-right text-xs"></i>
-              </span>
-            </div>
-          </div>
-
-          <div onclick="selectCategory('Unisex Sandals'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="cursor-pointer group rounded-2xl bg-slate-900/90 border border-white/10 p-4 hover:border-amber-400/50 transition-all">
-            <div class="aspect-square rounded-xl overflow-hidden bg-slate-800 mb-3">
-              <img src="https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80" alt="Unisex Sandals" onerror="this.src='https://placehold.co/500x500/1e293b/f59e0b?text=Unisex+Sandals'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            </div>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-bold text-sm text-white">Unisex Sandals</p>
-                <p class="text-xs text-slate-400">All-Terrain Grip</p>
-              </div>
-              <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-amber-400 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
-                <i class="fa-solid fa-arrow-right text-xs"></i>
-              </span>
-            </div>
-          </div>
-
-          <div onclick="selectCategory('Slippers'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="cursor-pointer group rounded-2xl bg-slate-900/90 border border-white/10 p-4 hover:border-amber-400/50 transition-all translate-y-4">
-            <div class="aspect-square rounded-xl overflow-hidden bg-slate-800 mb-3">
-              <img src="https://images.unsplash.com/photo-1562183241-b937e95585b6?auto=format&fit=crop&w=600&q=80" alt="Slippers" onerror="this.src='https://placehold.co/500x500/1e293b/f59e0b?text=Slippers'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            </div>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-bold text-sm text-white">Slippers</p>
-                <p class="text-xs text-slate-400">Cloud Foam Slides</p>
-              </div>
-              <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-amber-400 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
-                <i class="fa-solid fa-arrow-right text-xs"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Main Product Catalog Section -->
-  <main id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-    <!-- Filter & Sort Toolbar -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-slate-200">
-      <div>
-        <h2 id="catalogHeading" class="font-display font-extrabold text-2xl sm:text-3xl text-slate-950">
-          All Everyday Gear
-        </h2>
-        <p id="catalogCount" class="text-sm text-slate-500 mt-1">Showing 16 essentials</p>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-3">
-        <!-- Category Pills -->
-        <div class="flex flex-wrap items-center gap-1.5">
-          <button onclick="selectCategory('All')" data-filter-cat="All" class="filter-cat-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-950 text-white transition-all">All</button>
-          <button onclick="selectCategory('Backpacks')" data-filter-cat="Backpacks" class="filter-cat-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-all">Backpacks</button>
-          <button onclick="selectCategory('Sling Bags')" data-filter-cat="Sling Bags" class="filter-cat-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-all">Sling Bags</button>
-          <button onclick="selectCategory('Unisex Sandals')" data-filter-cat="Unisex Sandals" class="filter-cat-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-all">Unisex Sandals</button>
-          <button onclick="selectCategory('Slippers')" data-filter-cat="Slippers" class="filter-cat-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-all">Slippers</button>
-        </div>
-
-        <!-- Sort Dropdown -->
-        <div class="flex items-center gap-2 ml-auto md:ml-2">
-          <label for="sortSelect" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sort:</label>
-          <select id="sortSelect" onchange="handleSort(this.value)" class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 outline-none focus:border-slate-950 cursor-pointer">
-            <option value="featured">Featured</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-            <option value="rating">Top Rated</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Product Grid -->
-    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8"></div>
-
-    <!-- Empty State -->
-    <div id="emptyState" class="hidden text-center py-20 bg-white rounded-3xl border border-slate-200 mt-8 px-4">
-      <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4 text-2xl">
-        <i class="fa-solid fa-box-open"></i>
-      </div>
-      <h3 class="font-display font-bold text-xl text-slate-900">No matching gear found</h3>
-      <p class="text-slate-500 text-sm mt-1 max-w-md mx-auto">Try clearing your search term or switching back to all categories to view our full lineup.</p>
-      <button onclick="resetFilters()" class="mt-5 px-5 py-2.5 rounded-xl bg-slate-950 text-white text-sm font-semibold hover:bg-slate-800 transition-colors">
-        Reset Filters
-      </button>
-    </div>
-  </main>
-
-  <!-- Brand Value Strip -->
-  <section class="bg-white border-t border-slate-200 py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50">
-        <div class="w-11 h-11 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center shrink-0 text-lg">
-          <i class="fa-solid fa-droplet-slash"></i>
+    <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-indigo-500/30">
+          AP
         </div>
         <div>
-          <h4 class="font-bold text-slate-900 text-sm">Weather-Ready Fabrics</h4>
-          <p class="text-xs text-slate-500 mt-1 leading-relaxed">900D ballistic nylon &amp; sealed zippers keep your tech dry in sudden downpours.</p>
+          <h1 class="text-white font-extrabold text-xl tracking-tight">AttendPulse</h1>
+          <p class="text-slate-400 text-xs">Railway Cloud Attendance Platform</p>
         </div>
       </div>
-      <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50">
-        <div class="w-11 h-11 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center shrink-0 text-lg">
-          <i class="fa-solid fa-shoe-prints"></i>
+
+      <div id="loginError" class="hidden mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold"></div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Username</label>
+          <input type="text" id="loginUser" required placeholder="admin or teacher"
+            class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-indigo-500 outline-none" />
         </div>
         <div>
-          <h4 class="font-bold text-slate-900 text-sm">Ergonomic Unisex Sizing</h4>
-          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Contoured EVA footbeds and adjustable straps tailored for every foot shape (EU 37–44).</p>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
+          <input type="password" id="loginPass" required placeholder="••••••••"
+            class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-indigo-500 outline-none" />
         </div>
-      </div>
-      <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50">
-        <div class="w-11 h-11 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center shrink-0 text-lg">
-          <i class="fa-solid fa-rotate-left"></i>
-        </div>
-        <div>
-          <h4 class="font-bold text-slate-900 text-sm">7-Day Size Exchange</h4>
-          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Need a different sandal or slipper size? Hassle-free exchange within 7 days of delivery.</p>
-        </div>
-      </div>
-      <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50">
-        <div class="w-11 h-11 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center shrink-0 text-lg">
-          <i class="fa-solid fa-wallet"></i>
-        </div>
-        <div>
-          <h4 class="font-bold text-slate-900 text-sm">Flexible Checkout</h4>
-          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Pay safely via Cash on Delivery (COD), GCash e-wallet, or major Credit/Debit cards.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-800">
-        <div class="md:col-span-2 space-y-3">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-amber-400 flex items-center justify-center text-slate-950">
-              <i class="fa-solid fa-arrow-pointer -rotate-12"></i>
-            </div>
-            <span class="font-display font-extrabold text-xl text-white">CLIKC<span class="text-amber-400">DOWN</span></span>
-          </div>
-          <p class="text-sm text-slate-400 max-w-md leading-relaxed">
-            Everyday carry and unisex footwear built for movement. Minimalist aesthetics, rugged durability, and all-day comfort.
-          </p>
-        </div>
-        <div>
-          <h5 class="text-white font-bold text-sm uppercase tracking-wider mb-3">Categories</h5>
-          <ul class="space-y-2 text-sm">
-            <li><button onclick="selectCategory('Backpacks'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="hover:text-amber-400 transition-colors">Backpacks</button></li>
-            <li><button onclick="selectCategory('Sling Bags'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="hover:text-amber-400 transition-colors">Sling Bags</button></li>
-            <li><button onclick="selectCategory('Unisex Sandals'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="hover:text-amber-400 transition-colors">Unisex Sandals</button></li>
-            <li><button onclick="selectCategory('Slippers'); document.getElementById('catalog').scrollIntoView({behavior:'smooth'})" class="hover:text-amber-400 transition-colors">Slippers</button></li>
-          </ul>
-        </div>
-        <div>
-          <h5 class="text-white font-bold text-sm uppercase tracking-wider mb-3">Customer Care</h5>
-          <ul class="space-y-2 text-sm">
-            <li>Promo Code: <span class="text-amber-400 font-semibold">CLIKC10</span></li>
-            <li>Free Shipping over ₱2,000</li>
-            <li>Unisex Size Guide (EU 37–44)</li>
-            <li>support@clikcdown.store</li>
-          </ul>
-        </div>
-      </div>
-      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-        <p>&copy; 2026 Clikcdown Store. Powered by Railway &amp; PostgreSQL.</p>
-        <div class="flex items-center gap-4 text-base text-slate-400">
-          <i class="fa-brands fa-instagram hover:text-white cursor-pointer"></i>
-          <i class="fa-brands fa-tiktok hover:text-white cursor-pointer"></i>
-          <i class="fa-brands fa-facebook hover:text-white cursor-pointer"></i>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ==================== PRODUCT QUICK-VIEW MODAL ==================== -->
-  <div id="quickViewModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-        <span id="qvCategory" class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-100 text-slate-700">Category</span>
-        <button onclick="closeQuickView()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="relative rounded-2xl overflow-hidden bg-slate-100 aspect-square">
-          <img id="qvImage" src="" alt="" class="w-full h-full object-cover" />
-          <span id="qvBadge" class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-slate-950 text-amber-400 shadow"></span>
-        </div>
-
-        <div class="flex flex-col justify-between space-y-5">
-          <div>
-            <div class="flex items-center gap-2 text-xs font-semibold text-amber-500 mb-1">
-              <i class="fa-solid fa-star"></i>
-              <span id="qvRating" class="text-slate-700">4.9</span>
-              <span class="text-slate-400">• In Stock &amp; Ready to Ship</span>
-            </div>
-            <h3 id="qvTitle" class="font-display font-extrabold text-2xl text-slate-950">Product Name</h3>
-            <p id="qvPrice" class="text-2xl font-extrabold text-slate-900 mt-2">₱0</p>
-            <p id="qvDescription" class="text-sm text-slate-600 mt-3 leading-relaxed">Description</p>
-
-            <div class="mt-5">
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                Color: <span id="qvSelectedColorName" class="text-slate-900">Black</span>
-              </label>
-              <div id="qvColorOptions" class="flex flex-wrap gap-2"></div>
-            </div>
-
-            <div class="mt-5">
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                Select Size / Capacity: <span id="qvSelectedSizeName" class="text-slate-900">One Size</span>
-              </label>
-              <div id="qvSizeOptions" class="flex flex-wrap gap-2"></div>
-            </div>
-          </div>
-
-          <div class="pt-4 border-t border-slate-100 flex items-center gap-3">
-            <button id="qvAddToCartBtn" class="flex-1 py-3.5 px-5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg">
-              <i class="fa-solid fa-bag-shopping text-amber-400"></i>
-              <span>Add to Cart</span>
-            </button>
-            <button id="qvWishlistBtn" class="p-3.5 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50 text-slate-700 transition-colors" title="Save to Wishlist">
-              <i class="fa-regular fa-heart text-lg"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== SLIDE-OVER SHOPPING CART DRAWER ==================== -->
-  <div id="cartDrawerBackdrop" onclick="toggleCartDrawer(false)" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs transition-opacity"></div>
-  <aside id="cartDrawer" class="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
-    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <i class="fa-solid fa-bag-shopping text-amber-500 text-lg"></i>
-        <h3 class="font-display font-extrabold text-lg text-slate-950">Your Cart</h3>
-        <span id="drawerCartCount" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">0</span>
-      </div>
-      <button onclick="toggleCartDrawer(false)" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-
-    <div class="px-6 py-3 bg-slate-50 border-b border-slate-200">
-      <p id="shippingProgressText" class="text-xs font-semibold text-slate-700 mb-1.5">
-        Add <span class="text-amber-600 font-bold">₱2,000</span> more for FREE nationwide shipping!
-      </p>
-      <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-        <div id="shippingProgressBar" class="h-full bg-amber-400 transition-all duration-300 rounded-full" style="width: 0%"></div>
-      </div>
-    </div>
-
-    <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-
-    <div id="cartFooter" class="p-6 border-t border-slate-200 bg-slate-50 space-y-4">
-      <div>
-        <div class="flex gap-2">
-          <input type="text" id="promoInput" placeholder="Promo code (try CLIKC10)" class="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-sm uppercase font-medium outline-none focus:border-slate-950" />
-          <button onclick="applyPromoCode()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-colors">
-            Apply
-          </button>
-        </div>
-        <p id="promoFeedback" class="text-xs mt-1.5 hidden"></p>
-      </div>
-
-      <div class="space-y-1.5 text-sm">
-        <div class="flex justify-between text-slate-600">
-          <span>Subtotal</span>
-          <span id="cartSubtotal" class="font-semibold text-slate-900">₱0</span>
-        </div>
-        <div id="discountRow" class="hidden flex justify-between text-emerald-600 font-medium">
-          <span>Discount (CLIKC10 - 10%)</span>
-          <span id="cartDiscount">-₱0</span>
-        </div>
-        <div class="flex justify-between text-slate-600">
-          <span>Shipping Fee</span>
-          <span id="cartShipping" class="font-semibold text-slate-900">₱120</span>
-        </div>
-        <div class="flex justify-between text-base font-extrabold text-slate-950 pt-2 border-t border-slate-200">
-          <span>Total</span>
-          <span id="cartTotal">₱0</span>
-        </div>
-      </div>
-
-      <button onclick="openCheckoutModal()" class="w-full py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
-        <span>Proceed to Checkout</span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
-    </div>
-  </aside>
-
-  <!-- ==================== WISHLIST DRAWER ==================== -->
-  <div id="wishlistBackdrop" onclick="toggleWishlistDrawer(false)" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs"></div>
-  <aside id="wishlistDrawer" class="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
-    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <i class="fa-solid fa-heart text-rose-500 text-lg"></i>
-        <h3 class="font-display font-extrabold text-lg text-slate-950">Saved Wishlist</h3>
-      </div>
-      <button onclick="toggleWishlistDrawer(false)" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-    <div id="wishlistItemsContainer" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-  </aside>
-
-  <!-- ==================== POSTGRES ORDERS DRAWER ==================== -->
-  <div id="ordersBackdrop" onclick="toggleOrdersDrawer(false)" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs"></div>
-  <aside id="ordersDrawer" class="fixed top-0 right-0 z-50 h-full w-full max-w-lg bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
-    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-950 text-white">
-      <div class="flex items-center gap-2.5">
-        <i class="fa-solid fa-database text-amber-400 text-base"></i>
-        <h3 class="font-display font-extrabold text-lg">Customer Orders (Postgres)</h3>
-      </div>
-      <div class="flex items-center gap-2">
-        <button onclick="loadOrdersDrawer()" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold">
-          <i class="fa-solid fa-rotate"></i> Refresh
-        </button>
-        <button onclick="toggleOrdersDrawer(false)" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-    <div id="ordersListContainer" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
-      <p class="text-center text-sm text-slate-500 py-10">Loading orders from database...</p>
-    </div>
-  </aside>
-
-  <!-- ==================== CHECKOUT & ORDER CONFIRMATION MODAL ==================== -->
-  <div id="checkoutModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
-      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg bg-slate-950 text-amber-400 flex items-center justify-center text-sm">
-            <i class="fa-solid fa-lock"></i>
-          </div>
-          <h3 id="checkoutModalTitle" class="font-display font-extrabold text-lg text-slate-950">Secure Checkout</h3>
-        </div>
-        <button onclick="closeCheckoutModal()" class="w-9 h-9 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <form id="checkoutForm" onsubmit="submitOrder(event)" class="overflow-y-auto p-6 space-y-5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Full Name *</label>
-            <input type="text" id="custName" required placeholder="Juan Dela Cruz" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-slate-950 outline-none" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Mobile Number *</label>
-            <input type="tel" id="custPhone" required placeholder="0917 123 4567" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-slate-950 outline-none" />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Complete Delivery Address *</label>
-          <textarea id="custAddress" rows="2" required placeholder="House/Unit No., Street, Barangay, City/Province, Postal Code" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-slate-950 outline-none"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Payment Method *</label>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <label class="cursor-pointer">
-              <input type="radio" name="paymentMethod" value="Cash on Delivery (COD)" checked class="peer sr-only" />
-              <div class="p-3.5 rounded-xl border-2 border-slate-200 peer-checked:border-slate-950 peer-checked:bg-slate-50 transition-all text-center">
-                <i class="fa-solid fa-money-bill-wave text-emerald-600 text-lg mb-1"></i>
-                <p class="text-xs font-bold text-slate-900">Cash on Delivery</p>
-              </div>
-            </label>
-            <label class="cursor-pointer">
-              <input type="radio" name="paymentMethod" value="GCash E-Wallet" class="peer sr-only" />
-              <div class="p-3.5 rounded-xl border-2 border-slate-200 peer-checked:border-slate-950 peer-checked:bg-slate-50 transition-all text-center">
-                <i class="fa-solid fa-mobile-screen-button text-blue-600 text-lg mb-1"></i>
-                <p class="text-xs font-bold text-slate-900">GCash</p>
-              </div>
-            </label>
-            <label class="cursor-pointer">
-              <input type="radio" name="paymentMethod" value="Credit / Debit Card" class="peer sr-only" />
-              <div class="p-3.5 rounded-xl border-2 border-slate-200 peer-checked:border-slate-950 peer-checked:bg-slate-50 transition-all text-center">
-                <i class="fa-regular fa-credit-card text-amber-600 text-lg mb-1"></i>
-                <p class="text-xs font-bold text-slate-900">Credit / Debit</p>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-sm">
-          <div class="flex justify-between text-slate-600">
-            <span id="checkoutItemCount">Items (0)</span>
-            <span id="checkoutSubtotal" class="font-semibold text-slate-900">₱0</span>
-          </div>
-          <div class="flex justify-between text-slate-600">
-            <span>Shipping</span>
-            <span id="checkoutShipping" class="font-semibold text-slate-900">₱0</span>
-          </div>
-          <div id="checkoutDiscountRow" class="hidden flex justify-between text-emerald-600 font-medium">
-            <span>Promo Discount</span>
-            <span id="checkoutDiscount">-₱0</span>
-          </div>
-          <div class="flex justify-between font-extrabold text-base text-slate-950 pt-2 border-t border-slate-200">
-            <span>Amount Payable</span>
-            <span id="checkoutTotal">₱0</span>
-          </div>
-        </div>
-
-        <button type="submit" id="placeOrderBtn" class="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-amber-400 font-extrabold text-sm tracking-wide transition-all shadow-lg">
-          Place Order Now
+        <button type="submit" id="loginBtn"
+          class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all">
+          Sign In to Dashboard
         </button>
       </form>
 
-      <!-- Order Confirmation Receipt View -->
-      <div id="orderReceiptView" class="hidden overflow-y-auto p-6 sm:p-8 text-center space-y-5">
-        <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl shadow-inner">
-          <i class="fa-solid fa-check"></i>
+      <div class="mt-6 pt-5 border-t border-slate-800 text-xs text-slate-400 space-y-1.5">
+        <p class="font-bold text-slate-300">Default Accounts:</p>
+        <div class="flex justify-between bg-slate-950 px-3 py-2 rounded-lg border border-slate-800/80">
+          <span>Admin: <strong class="text-indigo-400">admin</strong> / <strong class="text-indigo-400">admin123</strong></span>
+          <span>Teacher: <strong class="text-emerald-400">teacher</strong> / <strong class="text-emerald-400">teacher123</strong></span>
         </div>
-        <div>
-          <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider">Saved to Database</span>
-          <h4 class="font-display font-extrabold text-2xl text-slate-950 mt-2">Thank you for shopping with Clikcdown!</h4>
-          <p class="text-sm text-slate-500 mt-1">Your order has been recorded in PostgreSQL and is ready for packing.</p>
-        </div>
-
-        <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-left space-y-2.5 text-sm">
-          <div class="flex justify-between">
-            <span class="text-slate-500">Order Reference:</span>
-            <span id="receiptOrderId" class="font-mono font-bold text-slate-950">#CD-000000</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Customer:</span>
-            <span id="receiptName" class="font-semibold text-slate-900">-</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Payment Method:</span>
-            <span id="receiptPayment" class="font-semibold text-slate-900">-</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Delivery To:</span>
-            <span id="receiptAddress" class="font-semibold text-slate-900 text-right max-w-[60%]">-</span>
-          </div>
-          <div class="flex justify-between pt-2.5 border-t border-slate-200 text-base font-extrabold text-slate-950">
-            <span>Total Paid / Due:</span>
-            <span id="receiptTotal" class="text-amber-600">₱0</span>
-          </div>
-        </div>
-
-        <button onclick="closeCheckoutModal()" class="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-sm transition-colors">
-          Continue Shopping
-        </button>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification Banner -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="bg-slate-950 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-800 flex items-center gap-3 text-sm font-medium">
-      <span id="toastIcon" class="w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-xs font-bold">
-        <i class="fa-solid fa-check"></i>
-      </span>
-      <span id="toastMessage">Added to cart!</span>
+  <!-- ==================== MAIN SAAS APPLICATION ==================== -->
+  <div id="appShell" class="hidden flex min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 flex flex-col justify-between">
+      <div>
+        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-indigo-500/30">
+              AP
+            </div>
+            <div>
+              <span class="font-extrabold text-base tracking-tight block leading-none">AttendPulse</span>
+              <span id="brandSchoolLabel" class="text-[11px] text-slate-400 font-medium truncate max-w-[140px] block mt-1">AttendPulse Academy</span>
+            </div>
+          </div>
+          <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <nav class="p-4 space-y-1.5 text-sm font-semibold">
+          <button onclick="switchView('dashboard', this)" class="nav-btn nav-active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+            <span>Dashboard</span>
+          </button>
+          <button onclick="switchView('students', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-user-graduate w-5 text-center"></i>
+            <span>Students</span>
+          </button>
+          <button onclick="switchView('attendance', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-clipboard-check w-5 text-center"></i>
+            <span>Attendance</span>
+          </button>
+          <button onclick="switchView('scanner', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-qrcode w-5 text-center"></i>
+            <span>QR Scanner</span>
+          </button>
+          <button onclick="switchView('records', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+            <span>Attendance Records</span>
+          </button>
+          <button onclick="switchView('reports', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-file-lines w-5 text-center"></i>
+            <span>Reports &amp; Analytics</span>
+          </button>
+          <button id="navUsersBtn" onclick="switchView('users', this)" class="nav-btn hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-users-gear w-5 text-center"></i>
+            <span>User Management</span>
+          </button>
+          <button onclick="switchView('settings', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-sliders w-5 text-center"></i>
+            <span>Settings</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+        <div class="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/70">
+          <div id="userInitials" class="w-9 h-9 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">AD</div>
+          <div class="min-w-0 flex-1">
+            <p id="userDisplayName" class="text-xs font-bold truncate">Administrator</p>
+            <span id="userRoleBadge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">Admin</span>
+          </div>
+        </div>
+        <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 text-xs font-bold transition-colors">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Area -->
+    <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
+      <header class="sticky top-0 z-30 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h2 id="pageTitle" class="font-extrabold text-lg sm:text-xl tracking-tight">Dashboard Overview</h2>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span id="headerDate" class="hidden sm:inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"></span>
+          <button onclick="toggleDarkMode()" title="Toggle Theme" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 transition-colors">
+            <i id="themeIcon" class="fa-solid fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
+
+        <!-- 1. DASHBOARD -->
+        <section id="view-dashboard" class="view-section space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase text-slate-400">Total Students</span>
+                <span class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-users"></i></span>
+              </div>
+              <p id="kpiTotal" class="text-3xl font-extrabold mt-3">0</p>
+              <p class="text-xs text-slate-400 mt-1">Active enrolled roster</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase text-slate-400">Present Today</span>
+                <span class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 flex items-center justify-center"><i class="fa-solid fa-user-check"></i></span>
+              </div>
+              <p id="kpiPresent" class="text-3xl font-extrabold text-emerald-600 mt-3">0</p>
+              <p class="text-xs text-slate-400 mt-1">On-time arrivals</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase text-slate-400">Absent Today</span>
+                <span class="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-user-xmark"></i></span>
+              </div>
+              <p id="kpiAbsent" class="text-3xl font-extrabold text-rose-600 mt-3">0</p>
+              <p class="text-xs text-slate-400 mt-1">Recorded absences</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase text-slate-400">Late Today</span>
+                <span class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-clock"></i></span>
+              </div>
+              <p id="kpiLate" class="text-3xl font-extrabold text-amber-500 mt-3">0</p>
+              <p class="text-xs text-slate-400 mt-1">After cutoff time</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-indigo-600 to-violet-700 text-white p-5 rounded-2xl shadow-lg shadow-indigo-600/20">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase text-indigo-200">Attendance Rate</span>
+                <span class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center"><i class="fa-solid fa-chart-line"></i></span>
+              </div>
+              <p id="kpiPercent" class="text-3xl font-extrabold mt-3">0%</p>
+              <p class="text-xs text-indigo-200 mt-1">Daily participation score</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <h3 class="font-bold text-base">7-Day Attendance Overview</h3>
+              <p class="text-xs text-slate-400 mb-4">Daily Present, Late, and Absent distribution</p>
+              <div class="h-72"><canvas id="weeklyChart"></canvas></div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
+              <h3 class="font-bold text-base mb-1">Recent Attendance Activities</h3>
+              <p class="text-xs text-slate-400 mb-4">Latest check-ins &amp; status updates</p>
+              <div id="recentActivityList" class="space-y-3 flex-1 overflow-y-auto max-h-72"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. STUDENTS -->
+        <section id="view-students" class="view-section hidden space-y-6">
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 class="font-bold text-lg">Student Directory</h3>
+                <p class="text-xs text-slate-400">Manage student profiles and generate unique QR ID passes</p>
+              </div>
+              <button onclick="openStudentModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md flex items-center gap-2 self-start">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add New Student</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+              <input type="text" id="studentSearch" oninput="renderStudentsTable()" placeholder="Search ID, name, or contact..."
+                class="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-indigo-500" />
+              <select id="studentCourseFilter" onchange="renderStudentsTable()"
+                class="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none">
+                <option value="ALL">All Courses</option>
+              </select>
+              <select id="studentSectionFilter" onchange="renderStudentsTable()"
+                class="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm outline-none">
+                <option value="ALL">All Sections</option>
+              </select>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 dark:border-slate-800 text-xs uppercase text-slate-400">
+                    <th class="py-3 px-4">Student ID</th>
+                    <th class="py-3 px-4">Full Name</th>
+                    <th class="py-3 px-4">Course &amp; Year</th>
+                    <th class="py-3 px-4">Section</th>
+                    <th class="py-3 px-4">Contact</th>
+                    <th class="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. DAILY ATTENDANCE -->
+        <section id="view-attendance" class="view-section hidden space-y-6">
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 class="font-bold text-lg">Daily Roll Call Sheet</h3>
+                <p class="text-xs text-slate-400">Mark student attendance with automatic timestamps</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-3">
+                <input type="date" id="rollDate" onchange="loadDailyRoll()"
+                  class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold" />
+                <select id="rollCourseFilter" onchange="renderDailyRollTable()"
+                  class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                  <option value="ALL">All Courses</option>
+                </select>
+                <select id="rollSectionFilter" onchange="renderDailyRollTable()"
+                  class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                  <option value="ALL">All Sections</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 dark:border-slate-800 text-xs uppercase text-slate-400">
+                    <th class="py-3 px-4">Student ID</th>
+                    <th class="py-3 px-4">Full Name</th>
+                    <th class="py-3 px-4">Course / Sec</th>
+                    <th class="py-3 px-4">Time In</th>
+                    <th class="py-3 px-4">Current Status</th>
+                    <th class="py-3 px-4">Quick Mark</th>
+                  </tr>
+                </thead>
+                <tbody id="rollTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. QR SCANNER -->
+        <section id="view-scanner" class="view-section hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-bold text-lg">Live QR Camera Scanner</h3>
+                  <p class="text-xs text-slate-400">Point student QR badge at webcam to auto-log attendance</p>
+                </div>
+                <button id="toggleCamBtn" onclick="toggleQrCamera()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+                  Start Camera
+                </button>
+              </div>
+              <div id="qrReader" class="w-full rounded-2xl overflow-hidden bg-slate-950 min-h-[260px] flex items-center justify-center text-slate-500 text-xs">
+                Click "Start Camera" or enter Student ID manually on the right
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+              <div>
+                <h3 class="font-bold text-lg">Barcode / Manual ID Check-In</h3>
+                <p class="text-xs text-slate-400">Supports USB QR/Barcode scanners or manual Student ID entry</p>
+              </div>
+
+              <form onsubmit="submitManualQr(event)" class="flex gap-2">
+                <input type="text" id="manualQrInput" placeholder="Scan or type Student ID (e.g. 2026-1001)" required
+                  class="flex-1 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold outline-none focus:border-indigo-500" />
+                <button type="submit" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
+                  Check In
+                </button>
+              </form>
+
+              <div id="scanResultBox" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-slate-500">
+                Awaiting QR scan... Duplicate check-ins on the same day are automatically blocked.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. ATTENDANCE RECORDS -->
+        <section id="view-records" class="view-section hidden space-y-6">
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 class="font-bold text-lg">Complete Attendance History</h3>
+                <p class="text-xs text-slate-400">Filter logs by date, student, course, or section</p>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <input type="date" id="histDate" onchange="renderRecordsTable()" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs" />
+                <input type="text" id="histStudent" oninput="renderRecordsTable()" placeholder="Student name/ID" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs" />
+                <select id="histCourse" onchange="renderRecordsTable()" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                  <option value="ALL">All Courses</option>
+                </select>
+                <select id="histSection" onchange="renderRecordsTable()" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                  <option value="ALL">All Sections</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 dark:border-slate-800 text-xs uppercase text-slate-400">
+                    <th class="py-3 px-4">Date</th>
+                    <th class="py-3 px-4">Student ID</th>
+                    <th class="py-3 px-4">Full Name</th>
+                    <th class="py-3 px-4">Course &amp; Sec</th>
+                    <th class="py-3 px-4">Time In</th>
+                    <th class="py-3 px-4">Status</th>
+                    <th class="py-3 px-4">Method</th>
+                  </tr>
+                </thead>
+                <tbody id="recordsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. REPORTS & ANALYTICS -->
+        <section id="view-reports" class="view-section hidden space-y-6">
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 class="font-bold text-lg">Attendance Analytics &amp; Risk Detection</h3>
+                <p class="text-xs text-slate-400">Identify frequent absences/lateness and export official reports</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <select id="reportPeriod" onchange="loadReports()" class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold">
+                  <option value="daily">Daily Report (Today)</option>
+                  <option value="weekly">Weekly Report (Last 7 Days)</option>
+                  <option value="monthly" selected>Monthly Report (Last 30 Days)</option>
+                </select>
+                <button onclick="exportReportExcel()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-excel"></i> Excel
+                </button>
+                <button onclick="exportReportPDF()" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-pdf"></i> PDF
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 dark:border-slate-800 text-xs uppercase text-slate-400">
+                    <th class="py-3 px-4">Student ID</th>
+                    <th class="py-3 px-4">Student Name</th>
+                    <th class="py-3 px-4">Course / Sec</th>
+                    <th class="py-3 px-4">Present</th>
+                    <th class="py-3 px-4">Late</th>
+                    <th class="py-3 px-4">Absent</th>
+                    <th class="py-3 px-4">Attendance %</th>
+                    <th class="py-3 px-4">Standing</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. USER MANAGEMENT (ADMIN ONLY) -->
+        <section id="view-users" class="view-section hidden space-y-6">
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <h3 class="font-bold text-lg mb-1">System Users &amp; Role Access</h3>
+            <p class="text-xs text-slate-400 mb-5">Create Admin or Teacher accounts</p>
+
+            <form onsubmit="addUserAccount(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-6">
+              <input type="text" id="newUserName" placeholder="Full Name" required class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+              <input type="text" id="newUserLogin" placeholder="Username" required class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+              <input type="password" id="newUserPass" placeholder="Password" required class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+              <select id="newUserRole" class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                <option value="Teacher">Teacher</option>
+                <option value="Admin">Admin</option>
+              </select>
+              <button type="submit" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">+ Create User</button>
+            </form>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 dark:border-slate-800 text-xs uppercase text-slate-400">
+                    <th class="py-3 px-4">Name</th>
+                    <th class="py-3 px-4">Username</th>
+                    <th class="py-3 px-4">Role</th>
+                    <th class="py-3 px-4">Created</th>
+                    <th class="py-3 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. SETTINGS -->
+        <section id="view-settings" class="view-section hidden space-y-6">
+          <div class="max-w-xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <h3 class="font-bold text-lg mb-1">System Configuration</h3>
+            <p class="text-xs text-slate-400 mb-5">Configure institution branding and QR scan late cutoff threshold</p>
+            <form onsubmit="saveSystemSettings(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-400 mb-1.5">School / Institution Name</label>
+                <input type="text" id="setSchoolName" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-400 mb-1.5">QR Check-In Late Cutoff Time (24-hr HH:MM:SS)</label>
+                <input type="time" step="1" id="setLateCutoff" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+              </div>
+              <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+                Save Configuration
+              </button>
+            </form>
+          </div>
+        </section>
+
+      </main>
     </div>
   </div>
 
-  <!-- ==================== APPLICATION LOGIC ==================== -->
-  <script>
-    const PRODUCTS = [
-      // --- BACKPACKS ---
-      {
-        id: 'bp-01',
-        name: 'Apex 28L Commuter Backpack',
-        category: 'Backpacks',
-        price: 2499,
-        rating: 4.9,
-        badge: 'Bestseller',
-        description: 'Waterproof 900D ballistic nylon pack with padded 16" laptop vault, luggage pass-through strap, and hidden anti-theft back pocket.',
-        sizes: ['24L', '28L'],
-        colors: [
-          { name: 'Stealth Black', hex: '#0f172a' },
-          { name: 'Olive Drab', hex: '#3f4e3c' },
-          { name: 'Slate Grey', hex: '#64748b' }
-        ],
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'bp-02',
-        name: 'Nomad Rolltop Weather Pack',
-        category: 'Backpacks',
-        price: 2199,
-        rating: 4.8,
-        badge: 'Waterproof',
-        description: 'Expandable rolltop silhouette with magnetic buckle closure, side quick-access zip, and breathable EVA back panel.',
-        sizes: ['22L', '30L'],
-        colors: [
-          { name: 'Charcoal', hex: '#1e293b' },
-          { name: 'Amber Ochre', hex: '#d97706' }
-        ],
-        image: 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'bp-03',
-        name: 'Metro Minimalist Daypack 20L',
-        category: 'Backpacks',
-        price: 1699,
-        rating: 4.7,
-        badge: 'Lightweight',
-        description: 'Ultra-clean everyday carry backpack weighing just 580g. Fits a 14" laptop, notebook, and dual insulated bottle sleeves.',
-        sizes: ['20L'],
-        colors: [
-          { name: 'Obsidian', hex: '#111827' },
-          { name: 'Sandstone', hex: '#d6c7b2' },
-          { name: 'Navy', hex: '#1e3a8a' }
-        ],
-        image: 'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'bp-04',
-        name: 'Vanguard Tactical Tech Pack',
-        category: 'Backpacks',
-        price: 2799,
-        rating: 4.9,
-        badge: 'New Drop',
-        description: 'Clamshell 180-degree opening travel and tech backpack featuring compression straps, sternum lock, and weather-sealed YKK zippers.',
-        sizes: ['28L', '32L'],
-        colors: [
-          { name: 'Matte Black', hex: '#090d16' },
-          { name: 'Coyote Tan', hex: '#a17f58' }
-        ],
-        image: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?auto=format&fit=crop&w=700&q=80'
-      },
-
-      // --- SLING BAGS ---
-      {
-        id: 'sb-01',
-        name: 'Pulse Crossbody EDC Sling',
-        category: 'Sling Bags',
-        price: 999,
-        rating: 4.9,
-        badge: 'Bestseller',
-        description: 'Compact 4L crossbody sling with magnetic quick-release buckle, fleece-lined sunglasses pocket, and key tether.',
-        sizes: ['One Size (4L)'],
-        colors: [
-          { name: 'Jet Black', hex: '#0f172a' },
-          { name: 'Forest Green', hex: '#2d4739' },
-          { name: 'Amber Accent', hex: '#f59e0b' }
-        ],
-        image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'sb-02',
-        name: 'Axis Ripstop Chest Rig Bag',
-        category: 'Sling Bags',
-        price: 1149,
-        rating: 4.8,
-        badge: 'Water-Resistant',
-        description: 'Diamond ripstop nylon construction with modular webbing loops, RFID-blocking card slot, and ambidextrous shoulder strap.',
-        sizes: ['One Size (5L)'],
-        colors: [
-          { name: 'Carbon Black', hex: '#18181b' },
-          { name: 'Storm Grey', hex: '#475569' }
-        ],
-        image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'sb-03',
-        name: 'Drift Mini Belt & Waist Pack',
-        category: 'Sling Bags',
-        price: 799,
-        rating: 4.6,
-        badge: 'Essential',
-        description: 'Wear around the waist or slung across the chest. Effortlessly carries phone, powerbank, wallet, and earbuds.',
-        sizes: ['One Size (2.5L)'],
-        colors: [
-          { name: 'Black', hex: '#0f172a' },
-          { name: 'Khaki Sand', hex: '#c2b280' },
-          { name: 'Rust Orange', hex: '#c2410c' }
-        ],
-        image: 'https://images.unsplash.com/photo-1575032617751-6ddec2089882?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'sb-04',
-        name: 'Cipher Tablet Messenger Sling',
-        category: 'Sling Bags',
-        price: 1399,
-        rating: 4.8,
-        badge: 'New Drop',
-        description: 'Structured 7L sling engineered to fit an 11-inch iPad/tablet in a suspended padded sleeve with stabilizer strap.',
-        sizes: ['One Size (7L)'],
-        colors: [
-          { name: 'Midnight Black', hex: '#020617' },
-          { name: 'Ash Grey', hex: '#94a3b8' }
-        ],
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80'
-      },
-
-      // --- UNISEX SANDALS ---
-      {
-        id: 'us-01',
-        name: 'Terra Stride All-Terrain Sandals',
-        category: 'Unisex Sandals',
-        price: 1299,
-        rating: 4.9,
-        badge: 'Bestseller',
-        description: 'Tri-strap quick-dry nylon webbing unisex sandals with high-traction Vibram-style lug outsole and arch-support EVA midsole.',
-        sizes: ['EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Triple Black', hex: '#0f172a' },
-          { name: 'Olive / Black', hex: '#4d5d53' },
-          { name: 'Sand / Amber', hex: '#d6c7b2' }
-        ],
-        image: 'https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'us-02',
-        name: 'Canyon Two-Strap Adventure Sandals',
-        category: 'Unisex Sandals',
-        price: 1199,
-        rating: 4.7,
-        badge: 'Quick-Dry',
-        description: 'Minimalist two-strap sport sandals with padded heel cushion and zero-chafe neoprene lining for river trails or city walks.',
-        sizes: ['EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Charcoal Slate', hex: '#334155' },
-          { name: 'Earth Brown', hex: '#78350f' }
-        ],
-        image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'us-03',
-        name: 'Dune Cork-Flex Buckle Sandals',
-        category: 'Unisex Sandals',
-        price: 1349,
-        rating: 4.8,
-        badge: 'Unisex Classic',
-        description: 'Anatomical cork-latex footbed wrapped in soft micro-suede with dual matte metal pin buckles for custom unisex fit.',
-        sizes: ['EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Taupe Suede', hex: '#a89f91' },
-          { name: 'Mocha', hex: '#5c4033' },
-          { name: 'Jet Black', hex: '#111827' }
-        ],
-        image: 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'us-04',
-        name: 'Hydro Fisherman Cage Sandals',
-        category: 'Unisex Sandals',
-        price: 1449,
-        rating: 4.8,
-        badge: 'New Drop',
-        description: 'Closed-toe breathable cage sandal crafted from lightweight injected EVA polymer—amphibious, odor-resistant, and ultra-durable.',
-        sizes: ['EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Matte Onyx', hex: '#0f172a' },
-          { name: 'Bone White', hex: '#e2e8f0' }
-        ],
-        image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=700&q=80'
-      },
-
-      // --- SLIPPERS ---
-      {
-        id: 'sl-01',
-        name: 'CloudPillow Recovery Slides',
-        category: 'Slippers',
-        price: 699,
-        rating: 4.9,
-        badge: 'Bestseller',
-        description: '40mm thick high-rebound CloudFoam slippers that absorb heel impact after long commutes, workouts, or home lounging.',
-        sizes: ['EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Obsidian Black', hex: '#0f172a' },
-          { name: 'Chalk Cream', hex: '#f1f5f9' },
-          { name: 'Sage Grey', hex: '#64748b' }
-        ],
-        image: 'https://images.unsplash.com/photo-1562183241-b937e95585b6?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'sl-02',
-        name: 'AeroWave Ribbed Bath & Street Slides',
-        category: 'Slippers',
-        price: 599,
-        rating: 4.7,
-        badge: 'Anti-Slip',
-        description: 'Wavy anti-skid outsole with drainage channels and contoured toe bar for wet bathroom tiles or quick errands outside.',
-        sizes: ['EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Charcoal', hex: '#1e293b' },
-          { name: 'Amber Gold', hex: '#f59e0b' },
-          { name: 'Navy Blue', hex: '#1e3a8a' }
-        ],
-        image: 'https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'sl-03',
-        name: 'Coastline Soft-Strap Flip Slippers',
-        category: 'Slippers',
-        price: 499,
-        rating: 4.6,
-        badge: 'Everyday Value',
-        description: 'Classic unisex thong slippers upgraded with woven soft-touch straps that never rub between toes and dual-density rubber sole.',
-        sizes: ['EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Black / Amber', hex: '#0f172a' },
-          { name: 'Slate Blue', hex: '#475569' }
-        ],
-        image: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=700&q=80'
-      },
-      {
-        id: 'sl-04',
-        name: 'Haven Quilted Puffer Mule Slippers',
-        category: 'Slippers',
-        price: 899,
-        rating: 4.8,
-        badge: 'Cozy Indoor/Out',
-        description: 'Ripstop quilted upper with plush fleece footbed and rugged rubber outsole—designed for cold AC rooms, flights, and campsite mornings.',
-        sizes: ['EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44'],
-        colors: [
-          { name: 'Stealth Black', hex: '#090d16' },
-          { name: 'Olive Camp', hex: '#3f4e3c' }
-        ],
-        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80'
-      }
-    ];
-
-    let state = {
-      category: 'All',
-      search: '',
-      sort: 'featured',
-      cart: JSON.parse(localStorage.getItem('clikcdown_cart')) || [],
-      wishlist: JSON.parse(localStorage.getItem('clikcdown_wishlist')) || [],
-      promoApplied: false,
-      activeQuickView: null,
-      selectedColor: null,
-      selectedSize: null
-    };
-
-    const FREE_SHIPPING_THRESHOLD = 2000;
-    const STANDARD_SHIPPING_FEE = 120;
-
-    function formatPHP(amount) {
-      return '₱' + Number(amount).toLocaleString('en-PH');
-    }
-
-    function saveState() {
-      localStorage.setItem('clikcdown_cart', JSON.stringify(state.cart));
-      localStorage.setItem('clikcdown_wishlist', JSON.stringify(state.wishlist));
-      updateBadges();
-    }
-
-    function updateBadges() {
-      const totalItems = state.cart.reduce((sum, item) => sum + item.qty, 0);
-      document.getElementById('cartBadge').textContent = totalItems;
-      document.getElementById('drawerCartCount').textContent = totalItems;
-
-      const wishBadge = document.getElementById('wishlistBadge');
-      wishBadge.textContent = state.wishlist.length;
-      wishBadge.classList.toggle('hidden', state.wishlist.length === 0);
-    }
-
-    let toastTimeout;
-    function showToast(message, isError = false) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toastMessage');
-      const toastIcon = document.getElementById('toastIcon');
-
-      toastMsg.textContent = message;
-      toastIcon.className = isError
-        ? 'w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold'
-        : 'w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-xs font-bold';
-      toastIcon.innerHTML = isError ? '<i class="fa-solid fa-exclamation"></i>' : '<i class="fa-solid fa-check"></i>';
-
-      toast.classList.remove('translate-y-24', 'opacity-0');
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toast.classList.add('translate-y-24', 'opacity-0');
-      }, 2600);
-    }
-
-    function copyPromoCode() {
-      navigator.clipboard?.writeText('CLIKC10');
-      showToast('Promo code CLIKC10 copied!');
-    }
-
-    function selectCategory(cat) {
-      state.category = cat;
-
-      document.querySelectorAll('.nav-cat-btn').forEach(btn => {
-        const isMatch = btn.dataset.navCat === cat;
-        btn.className = isMatch
-          ? 'nav-cat-btn shrink-0 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-950 text-white shadow-sm'
-          : 'nav-cat-btn shrink-0 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-950 transition-all bg-slate-100 lg:bg-transparent';
-      });
-
-      document.querySelectorAll('.filter-cat-btn').forEach(btn => {
-        const isMatch = btn.dataset.filterCat === cat;
-        btn.className = isMatch
-          ? 'filter-cat-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-950 text-white transition-all'
-          : 'filter-cat-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-all';
-      });
-
-      document.getElementById('catalogHeading').textContent = cat === 'All' ? 'All Everyday Gear' : cat;
-      renderProducts();
-    }
-
-    function handleSearch(val) {
-      state.search = val.trim().toLowerCase();
-      document.getElementById('clearSearchBtn').classList.toggle('hidden', state.search === '');
-      renderProducts();
-    }
-
-    function clearSearch() {
-      document.getElementById('searchInput').value = '';
-      handleSearch('');
-    }
-
-    function handleSort(val) {
-      state.sort = val;
-      renderProducts();
-    }
-
-    function resetFilters(e) {
-      if (e) e.preventDefault();
-      clearSearch();
-      state.sort = 'featured';
-      document.getElementById('sortSelect').value = 'featured';
-      selectCategory('All');
-    }
-
-    function renderProducts() {
-      let filtered = PRODUCTS.filter(p => {
-        const matchCat = state.category === 'All' || p.category === state.category;
-        const matchSearch =
-          p.name.toLowerCase().includes(state.search) ||
-          p.category.toLowerCase().includes(state.search) ||
-          p.description.toLowerCase().includes(state.search);
-        return matchCat && matchSearch;
-      });
-
-      if (state.sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
-      else if (state.sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
-      else if (state.sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
-
-      const grid = document.getElementById('productGrid');
-      const emptyState = document.getElementById('emptyState');
-      document.getElementById('catalogCount').textContent = `Showing ${filtered.length} ${filtered.length === 1 ? 'item' : 'essentials'}`;
-
-      if (filtered.length === 0) {
-        grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        return;
-      }
-
-      emptyState.classList.add('hidden');
-      grid.innerHTML = filtered.map(product => {
-        const isWished = state.wishlist.includes(product.id);
-        const fallbackImg = `https://placehold.co/600x600/1e293b/f59e0b?text=${encodeURIComponent(product.name)}`;
-
-        return `
-          <article class="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden hover:shadow-xl hover:border-slate-300 transition-all duration-300 flex flex-col">
-            <div class="relative aspect-square bg-slate-100 overflow-hidden cursor-pointer" onclick="openQuickView('${product.id}')">
-              <img
-                src="${product.image}"
-                alt="${product.name}"
-                onerror="this.onerror=null; this.src='${fallbackImg}';"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <span class="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-950/90 text-amber-400 text-[11px] font-bold tracking-wide shadow">
-                ${product.badge}
-              </span>
-              <button
-                onclick="event.stopPropagation(); toggleWishlist('${product.id}')"
-                aria-label="Toggle Wishlist"
-                class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow flex items-center justify-center transition-transform active:scale-90 ${isWished ? 'text-rose-500' : 'text-slate-600'}"
-              >
-                <i class="${isWished ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
-              </button>
-              <div class="absolute inset-x-3 bottom-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
-                <button class="w-full py-2.5 rounded-xl bg-slate-950/90 backdrop-blur-xs text-white text-xs font-bold tracking-wide hover:bg-slate-950 shadow-lg">
-                  Select Size &amp; Color
-                </button>
-              </div>
-            </div>
-
-            <div class="p-5 flex-1 flex flex-col justify-between">
-              <div>
-                <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-                  <span class="font-semibold uppercase tracking-wider text-slate-400">${product.category}</span>
-                  <span class="flex items-center gap-1 font-bold text-slate-700">
-                    <i class="fa-solid fa-star text-amber-400"></i> ${product.rating}
-                  </span>
-                </div>
-                <h3 onclick="openQuickView('${product.id}')" class="font-display font-bold text-base text-slate-950 group-hover:text-amber-600 transition-colors cursor-pointer line-clamp-1">
-                  ${product.name}
-                </h3>
-                <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                  ${product.description}
-                </p>
-
-                <div class="flex items-center gap-1.5 mt-3">
-                  ${product.colors.map(c => `
-                    <span title="${c.name}" class="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-2xs" style="background-color: ${c.hex}"></span>
-                  `).join('')}
-                  <span class="text-[11px] text-slate-400 ml-1">${product.sizes.length > 1 ? product.sizes.length + ' sizes' : product.sizes[0]}</span>
-                </div>
-              </div>
-
-              <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-                <span class="font-display font-extrabold text-lg text-slate-950">${formatPHP(product.price)}</span>
-                <button
-                  onclick="quickAddDefault('${product.id}')"
-                  class="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-amber-400 text-white hover:text-slate-950 text-xs font-bold transition-colors flex items-center gap-1.5"
-                >
-                  <i class="fa-solid fa-plus"></i>
-                  <span>Add</span>
-                </button>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join('');
-    }
-
-    function openQuickView(productId) {
-      const product = PRODUCTS.find(p => p.id === productId);
-      if (!product) return;
-
-      state.activeQuickView = product;
-      state.selectedColor = product.colors[0].name;
-      state.selectedSize = product.sizes[0];
-
-      const fallbackImg = `https://placehold.co/600x600/1e293b/f59e0b?text=${encodeURIComponent(product.name)}`;
-      const imgEl = document.getElementById('qvImage');
-      imgEl.src = product.image;
-      imgEl.onerror = () => { imgEl.src = fallbackImg; };
-
-      document.getElementById('qvCategory').textContent = product.category;
-      document.getElementById('qvBadge').textContent = product.badge;
-      document.getElementById('qvRating').textContent = `${product.rating} (Verified Reviews)`;
-      document.getElementById('qvTitle').textContent = product.name;
-      document.getElementById('qvPrice').textContent = formatPHP(product.price);
-      document.getElementById('qvDescription').textContent = product.description;
-
-      renderQuickViewSelectors();
-      updateQuickViewWishlistBtn();
-
-      document.getElementById('qvAddToCartBtn').onclick = () => {
-        addToCart(product.id, state.selectedColor, state.selectedSize);
-        closeQuickView();
-      };
-
-      document.getElementById('qvWishlistBtn').onclick = () => {
-        toggleWishlist(product.id);
-        updateQuickViewWishlistBtn();
-      };
-
-      const modal = document.getElementById('quickViewModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function renderQuickViewSelectors() {
-      const product = state.activeQuickView;
-      document.getElementById('qvSelectedColorName').textContent = state.selectedColor;
-      document.getElementById('qvSelectedSizeName').textContent = state.selectedSize;
-
-      document.getElementById('qvColorOptions').innerHTML = product.colors.map(c => {
-        const active = c.name === state.selectedColor;
-        return `
-          <button
-            type="button"
-            onclick="state.selectedColor='${c.name}'; renderQuickViewSelectors()"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${active ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'}"
-          >
-            <span class="w-3.5 h-3.5 rounded-full border border-white/40" style="background-color:${c.hex}"></span>
-            <span>${c.name}</span>
-          </button>
-        `;
-      }).join('');
-
-      document.getElementById('qvSizeOptions').innerHTML = product.sizes.map(s => {
-        const active = s === state.selectedSize;
-        return `
-          <button
-            type="button"
-            onclick="state.selectedSize='${s}'; renderQuickViewSelectors()"
-            class="px-3.5 py-2 rounded-xl border text-xs font-bold transition-all ${active ? 'border-slate-950 bg-amber-400 text-slate-950' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'}"
-          >
-            ${s}
-          </button>
-        `;
-      }).join('');
-    }
-
-    function updateQuickViewWishlistBtn() {
-      if (!state.activeQuickView) return;
-      const isWished = state.wishlist.includes(state.activeQuickView.id);
-      const btn = document.getElementById('qvWishlistBtn');
-      btn.innerHTML = `<i class="${isWished ? 'fa-solid text-rose-500' : 'fa-regular'} fa-heart text-lg"></i>`;
-    }
-
-    function closeQuickView() {
-      const modal = document.getElementById('quickViewModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function toggleWishlist(productId) {
-      const idx = state.wishlist.indexOf(productId);
-      if (idx > -1) {
-        state.wishlist.splice(idx, 1);
-        showToast('Removed from wishlist');
-      } else {
-        state.wishlist.push(productId);
-        showToast('Saved to wishlist');
-      }
-      saveState();
-      renderProducts();
-      renderWishlistDrawer();
-    }
-
-    function toggleWishlistDrawer(open) {
-      const drawer = document.getElementById('wishlistDrawer');
-      const backdrop = document.getElementById('wishlistBackdrop');
-      if (open) {
-        renderWishlistDrawer();
-        backdrop.classList.remove('hidden');
-        drawer.classList.remove('translate-x-full');
-      } else {
-        backdrop.classList.add('hidden');
-        drawer.classList.add('translate-x-full');
-      }
-    }
-
-    function renderWishlistDrawer() {
-      const container = document.getElementById('wishlistItemsContainer');
-      if (state.wishlist.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-16">
-            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-xl">
-              <i class="fa-regular fa-heart"></i>
-            </div>
-            <p class="font-bold text-slate-800">Your wishlist is empty</p>
-            <p class="text-xs text-slate-500 mt-1">Tap the heart icon on any item to save it here.</p>
+  <!-- ADD/EDIT STUDENT MODAL -->
+  <div id="studentModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="studentModalTitle" class="font-extrabold text-lg">Add Student</h3>
+        <button onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveStudentForm(event)" class="space-y-4">
+        <input type="hidden" id="stuDbId" value="0" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1">Student ID *</label>
+            <input type="text" id="stuCode" required placeholder="2026-1006" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
           </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = state.wishlist.map(id => {
-        const p = PRODUCTS.find(item => item.id === id);
-        if (!p) return '';
-        return `
-          <div class="flex items-center gap-3.5 p-3 rounded-2xl border border-slate-200 bg-slate-50">
-            <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/200x200/1e293b/f59e0b?text=Clikcdown'" class="w-16 h-16 rounded-xl object-cover shrink-0" />
-            <div class="flex-1 min-w-0">
-              <p class="text-[11px] font-semibold uppercase text-slate-400">${p.category}</p>
-              <h4 class="font-bold text-sm text-slate-900 truncate">${p.name}</h4>
-              <p class="font-extrabold text-sm text-slate-950 mt-0.5">${formatPHP(p.price)}</p>
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <button onclick="toggleWishlistDrawer(false); openQuickView('${p.id}')" class="px-3 py-1.5 rounded-lg bg-slate-950 text-white text-xs font-bold hover:bg-slate-800">
-                Select
-              </button>
-              <button onclick="toggleWishlist('${p.id}')" class="text-xs text-rose-500 hover:underline font-medium">
-                Remove
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function quickAddDefault(productId) {
-      const product = PRODUCTS.find(p => p.id === productId);
-      if (!product) return;
-      if (product.sizes.length > 1) {
-        openQuickView(productId);
-        return;
-      }
-      addToCart(product.id, product.colors[0].name, product.sizes[0]);
-    }
-
-    function addToCart(productId, color, size) {
-      const product = PRODUCTS.find(p => p.id === productId);
-      if (!product) return;
-
-      const variantKey = `${productId}__${color}__${size}`;
-      const existing = state.cart.find(item => item.variantKey === variantKey);
-
-      if (existing) existing.qty += 1;
-      else {
-        state.cart.push({
-          variantKey,
-          id: product.id,
-          name: product.name,
-          category: product.category,
-          price: product.price,
-          image: product.image,
-          color,
-          size,
-          qty: 1
-        });
-      }
-
-      saveState();
-      renderCartDrawer();
-      showToast(`Added "${product.name}" to cart`);
-    }
-
-    function updateCartQty(variantKey, delta) {
-      const index = state.cart.findIndex(item => item.variantKey === variantKey);
-      if (index === -1) return;
-
-      state.cart[index].qty += delta;
-      if (state.cart[index].qty <= 0) state.cart.splice(index, 1);
-
-      saveState();
-      renderCartDrawer();
-    }
-
-    function removeFromCart(variantKey) {
-      state.cart = state.cart.filter(item => item.variantKey !== variantKey);
-      saveState();
-      renderCartDrawer();
-      showToast('Item removed from cart');
-    }
-
-    function toggleCartDrawer(open) {
-      const drawer = document.getElementById('cartDrawer');
-      const backdrop = document.getElementById('cartDrawerBackdrop');
-      if (open) {
-        renderCartDrawer();
-        backdrop.classList.remove('hidden');
-        drawer.classList.remove('translate-x-full');
-      } else {
-        backdrop.classList.add('hidden');
-        drawer.classList.add('translate-x-full');
-      }
-    }
-
-    function applyPromoCode() {
-      const input = document.getElementById('promoInput').value.trim().toUpperCase();
-      const feedback = document.getElementById('promoFeedback');
-      feedback.classList.remove('hidden');
-
-      if (input === 'CLIKC10') {
-        state.promoApplied = true;
-        feedback.textContent = 'Promo code CLIKC10 applied! (10% OFF)';
-        feedback.className = 'text-xs mt-1.5 text-emerald-600 font-semibold';
-      } else {
-        state.promoApplied = false;
-        feedback.textContent = 'Invalid promo code. Try CLIKC10.';
-        feedback.className = 'text-xs mt-1.5 text-rose-500 font-semibold';
-      }
-      renderCartDrawer();
-    }
-
-    function calculateTotals() {
-      const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-      const discount = state.promoApplied ? Math.round(subtotal * 0.10) : 0;
-      const afterDiscount = subtotal - discount;
-      const shipping = subtotal === 0 ? 0 : (afterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE);
-      const total = afterDiscount + shipping;
-      return { subtotal, discount, shipping, total };
-    }
-
-    function renderCartDrawer() {
-      const container = document.getElementById('cartItemsContainer');
-      const footer = document.getElementById('cartFooter');
-      const { subtotal, discount, shipping, total } = calculateTotals();
-
-      const progressPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
-      document.getElementById('shippingProgressBar').style.width = `${progressPct}%`;
-
-      if (subtotal >= FREE_SHIPPING_THRESHOLD) {
-        document.getElementById('shippingProgressText').innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> You unlocked FREE nationwide shipping!</span>`;
-      } else {
-        const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
-        document.getElementById('shippingProgressText').innerHTML = `Add <span class="text-amber-600 font-bold">${formatPHP(remaining)}</span> more for FREE nationwide shipping!`;
-      }
-
-      if (state.cart.length === 0) {
-        footer.classList.add('hidden');
-        container.innerHTML = `
-          <div class="text-center py-20">
-            <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4 text-2xl">
-              <i class="fa-solid fa-bag-shopping"></i>
-            </div>
-            <h4 class="font-display font-bold text-lg text-slate-900">Your cart is empty</h4>
-            <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Explore our everyday backpacks, sling bags, unisex sandals, and recovery slippers.</p>
-            <button onclick="toggleCartDrawer(false)" class="mt-5 px-5 py-2.5 rounded-xl bg-slate-950 text-white text-xs font-bold hover:bg-slate-800">
-              Browse Gear
-            </button>
-          </div>
-        `;
-        return;
-      }
-
-      footer.classList.remove('hidden');
-      container.innerHTML = state.cart.map(item => `
-        <div class="flex gap-3.5 p-3.5 rounded-2xl border border-slate-200 bg-white shadow-2xs">
-          <img src="${item.image}" alt="${item.name}" onerror="this.src='https://placehold.co/200x200/1e293b/f59e0b?text=Item'" class="w-20 h-20 rounded-xl object-cover bg-slate-100 shrink-0" />
-          <div class="flex-1 min-w-0 flex flex-col justify-between">
-            <div>
-              <div class="flex items-start justify-between gap-2">
-                <h4 class="font-bold text-sm text-slate-950 leading-snug line-clamp-1">${item.name}</h4>
-                <button onclick="removeFromCart('${item.variantKey}')" class="text-slate-400 hover:text-rose-500 text-xs p-1" title="Remove">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
-              </div>
-              <p class="text-xs text-slate-500 mt-0.5">${item.color} • <span class="font-semibold text-slate-700">${item.size}</span></p>
-            </div>
-
-            <div class="flex items-center justify-between mt-2.5">
-              <span class="font-extrabold text-sm text-slate-950">${formatPHP(item.price * item.qty)}</span>
-              <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
-                <button onclick="updateCartQty('${item.variantKey}', -1)" class="w-7 h-7 flex items-center justify-center text-slate-700 hover:bg-slate-200 text-xs font-bold">−</button>
-                <span class="px-2.5 text-xs font-bold text-slate-950">${item.qty}</span>
-                <button onclick="updateCartQty('${item.variantKey}', 1)" class="w-7 h-7 flex items-center justify-center text-slate-700 hover:bg-slate-200 text-xs font-bold">+</button>
-              </div>
-            </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1">Contact Number *</label>
+            <input type="text" id="stuContact" required placeholder="0917-000-0000" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
           </div>
         </div>
-      `).join('');
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Full Name *</label>
+          <input type="text" id="stuName" required placeholder="Juan Dela Cruz" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1">Course *</label>
+            <input type="text" id="stuCourse" required placeholder="BSIT" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1">Year Level *</label>
+            <select id="stuYear" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>4th Year</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1">Section *</label>
+            <input type="text" id="stuSection" required placeholder="A" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeStudentModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-      document.getElementById('cartSubtotal').textContent = formatPHP(subtotal);
-      document.getElementById('cartShipping').textContent = shipping === 0 ? 'FREE' : formatPHP(shipping);
-      document.getElementById('cartTotal').textContent = formatPHP(total);
+  <!-- STUDENT QR BADGE MODAL -->
+  <div id="qrBadgeModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 text-center border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+      <h3 class="font-extrabold text-lg">Student QR Pass</h3>
+      <div id="qrCanvasBox" class="bg-white p-4 rounded-2xl inline-block mx-auto border border-slate-200"></div>
+      <div>
+        <p id="qrBadgeName" class="font-bold text-base"></p>
+        <p id="qrBadgeMeta" class="text-xs text-slate-400"></p>
+      </div>
+      <button onclick="document.getElementById('qrBadgeModal').classList.add('hidden'); document.getElementById('qrBadgeModal').classList.remove('flex');"
+        class="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold">Close Pass</button>
+    </div>
+  </div>
 
-      const discountRow = document.getElementById('discountRow');
-      if (state.promoApplied && discount > 0) {
-        discountRow.classList.remove('hidden');
-        document.getElementById('cartDiscount').textContent = `-${formatPHP(discount)}`;
-      } else {
-        discountRow.classList.add('hidden');
-      }
+  <!-- Toast Banner -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-2xl bg-slate-900 text-white text-xs font-bold shadow-xl border border-slate-700"></div>
+
+  <script>
+    let authToken = localStorage.getItem('ap_token') || '';
+    let currentUser = null;
+    let allStudents = [];
+    let dailyRoll = [];
+    let allRecords = [];
+    let reportRows = [];
+    let weeklyChartInstance = null;
+    let html5QrScanner = null;
+    let cameraRunning = false;
+
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    document.getElementById('rollDate').value = todayStr;
+    document.getElementById('headerDate').innerHTML = `<i class="fa-regular fa-calendar text-indigo-500"></i> ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+    function notify(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl text-xs font-bold shadow-xl ${isError ? 'bg-rose-600 text-white' : 'bg-slate-900 dark:bg-indigo-600 text-white'}`;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3000);
     }
 
-    function openCheckoutModal() {
-      if (state.cart.length === 0) return;
-      toggleCartDrawer(false);
-
-      const { subtotal, discount, shipping, total } = calculateTotals();
-      const totalItems = state.cart.reduce((sum, i) => sum + i.qty, 0);
-
-      document.getElementById('checkoutModalTitle').textContent = 'Secure Checkout';
-      document.getElementById('checkoutForm').classList.remove('hidden');
-      document.getElementById('orderReceiptView').classList.add('hidden');
-
-      document.getElementById('checkoutItemCount').textContent = `Items (${totalItems})`;
-      document.getElementById('checkoutSubtotal').textContent = formatPHP(subtotal);
-      document.getElementById('checkoutShipping').textContent = shipping === 0 ? 'FREE' : formatPHP(shipping);
-      document.getElementById('checkoutTotal').textContent = formatPHP(total);
-
-      const discRow = document.getElementById('checkoutDiscountRow');
-      if (state.promoApplied && discount > 0) {
-        discRow.classList.remove('hidden');
-        document.getElementById('checkoutDiscount').textContent = `-${formatPHP(discount)}`;
-      } else {
-        discRow.classList.add('hidden');
-      }
-
-      const modal = document.getElementById('checkoutModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
     }
 
-    async function submitOrder(e) {
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      html.classList.toggle('dark');
+      const isDark = html.classList.contains('dark');
+      localStorage.setItem('ap_theme', isDark ? 'dark' : 'light');
+      document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+    if (localStorage.getItem('ap_theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.getElementById('themeIcon').className = 'fa-solid fa-sun';
+    }
+
+    async function api(endpoint, method = 'GET', body = null) {
+      const opts = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': authToken
+        }
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(endpoint, opts);
+      const data = await res.json();
+      if (res.status === 401) {
+        showLoginScreen();
+        throw new Error(data.error || 'Session expired');
+      }
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    // ==================== AUTHENTICATION ====================
+    function showLoginScreen() {
+      document.getElementById('appShell').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    function enterApp(user) {
+      currentUser = user;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appShell').classList.remove('hidden');
+      document.getElementById('userDisplayName').textContent = user.full_name;
+      document.getElementById('userInitials').textContent = user.full_name.slice(0, 2).toUpperCase();
+      document.getElementById('userRoleBadge').textContent = user.role;
+      document.getElementById('navUsersBtn').classList.toggle('hidden', user.role !== 'Admin');
+      loadSettings();
+      loadDashboard();
+    }
+
+    async function handleLogin(e) {
       e.preventDefault();
-      const btn = document.getElementById('placeOrderBtn');
-      const name = document.getElementById('custName').value.trim();
-      const phone = document.getElementById('custPhone').value.trim();
-      const address = document.getElementById('custAddress').value.trim();
-      const payment = document.querySelector('input[name="paymentMethod"]:checked').value;
-      const { total } = calculateTotals();
-      const orderId = '#CD-' + Math.floor(100000 + Math.random() * 900000);
-
-      btn.disabled = true;
-      btn.textContent = 'Saving Order...';
-
+      const errBox = document.getElementById('loginError');
+      errBox.classList.add('hidden');
       try {
-        const res = await fetch('/api/orders', {
+        const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            order_ref: orderId,
-            customer_name: name,
-            phone,
-            address,
-            payment_method: payment,
-            items: state.cart,
-            total_amount: total
+            username: document.getElementById('loginUser').value,
+            password: document.getElementById('loginPass').value
           })
         });
-
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to save order');
-
-        document.getElementById('receiptOrderId').textContent = orderId;
-        document.getElementById('receiptName').textContent = `${name} (${phone})`;
-        document.getElementById('receiptPayment').textContent = payment;
-        document.getElementById('receiptAddress').textContent = address;
-        document.getElementById('receiptTotal').textContent = formatPHP(total);
-
-        state.cart = [];
-        state.promoApplied = false;
-        document.getElementById('promoInput').value = '';
-        document.getElementById('promoFeedback').classList.add('hidden');
-        document.getElementById('checkoutForm').reset();
-        saveState();
-
-        document.getElementById('checkoutModalTitle').textContent = 'Order Receipt';
-        document.getElementById('checkoutForm').classList.add('hidden');
-        document.getElementById('orderReceiptView').classList.remove('hidden');
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        authToken = data.token;
+        localStorage.setItem('ap_token', authToken);
+        enterApp(data.user);
       } catch (err) {
-        showToast(err.message, true);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Place Order Now';
+        errBox.textContent = err.message;
+        errBox.classList.remove('hidden');
       }
     }
 
-    function closeCheckoutModal() {
-      const modal = document.getElementById('checkoutModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+    async function handleLogout() {
+      await fetch('/api/logout', { method: 'POST', headers: { 'x-auth-token': authToken } });
+      authToken = '';
+      localStorage.removeItem('ap_token');
+      showLoginScreen();
     }
 
-    // ==================== POSTGRES ORDERS DRAWER LOGIC ====================
-    function toggleOrdersDrawer(open) {
-      const drawer = document.getElementById('ordersDrawer');
-      const backdrop = document.getElementById('ordersBackdrop');
-      if (open) {
-        loadOrdersDrawer();
-        backdrop.classList.remove('hidden');
-        drawer.classList.remove('translate-x-full');
-      } else {
-        backdrop.classList.add('hidden');
-        drawer.classList.add('translate-x-full');
-      }
+    // ==================== NAVIGATION ====================
+    function switchView(view, btn) {
+      document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(`view-${view}`).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
+      if (btn) btn.classList.add('nav-active');
+
+      const titles = {
+        dashboard: 'Dashboard Overview',
+        students: 'Student Directory & QR Passes',
+        attendance: 'Daily Roll Call',
+        scanner: 'QR Code Check-In Terminal',
+        records: 'Attendance Records History',
+        reports: 'Reports & Analytics',
+        users: 'User & Role Management',
+        settings: 'System Settings'
+      };
+      document.getElementById('pageTitle').textContent = titles[view] || 'AttendPulse';
+
+      if (view === 'dashboard') loadDashboard();
+      if (view === 'students') loadStudents();
+      if (view === 'attendance') loadDailyRoll();
+      if (view === 'records') loadRecords();
+      if (view === 'reports') loadReports();
+      if (view === 'users') loadUsers();
+      if (view === 'settings') loadSettings();
     }
 
-    async function loadOrdersDrawer() {
-      const container = document.getElementById('ordersListContainer');
-      container.innerHTML = `<p class="text-center text-sm text-slate-500 py-10">Loading orders from Postgres...</p>`;
+    // ==================== 1. DASHBOARD ====================
+    async function loadDashboard() {
+      const data = await api('/api/dashboard');
+      document.getElementById('kpiTotal').textContent = data.totalStudents;
+      document.getElementById('kpiPresent').textContent = data.counts.Present;
+      document.getElementById('kpiAbsent').textContent = data.counts.Absent;
+      document.getElementById('kpiLate').textContent = data.counts.Late;
+      document.getElementById('kpiPercent').textContent = `${data.percentage}%`;
 
-      try {
-        const res = await fetch('/api/orders');
-        const orders = await res.json();
-        if (!res.ok) throw new Error(orders.error || 'Failed to fetch orders');
-
-        if (orders.length === 0) {
-          container.innerHTML = `
-            <div class="text-center py-16">
-              <p class="font-bold text-slate-800">No orders placed yet</p>
-              <p class="text-xs text-slate-500 mt-1">Complete a checkout to see orders appear here from PostgreSQL.</p>
+      const actEl = document.getElementById('recentActivityList');
+      actEl.innerHTML = data.recent.length === 0
+        ? `<p class="text-xs text-slate-400">No attendance logged yet today.</p>`
+        : data.recent.map(r => `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <div>
+              <p class="text-xs font-bold">${r.full_name}</p>
+              <p class="text-[11px] text-slate-400">${r.course}-${r.section} • ${r.method} (${r.time_in || ''})</p>
             </div>
-          `;
-          return;
+            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${badgeClass(r.status)}">${r.status}</span>
+          </div>
+        `).join('');
+
+      const ctx = document.getElementById('weeklyChart').getContext('2d');
+      if (weeklyChartInstance) weeklyChartInstance.destroy();
+      weeklyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.weekly.map(w => w.date),
+          datasets: [
+            { label: 'Present', data: data.weekly.map(w => w.present), backgroundColor: '#10b981', borderRadius: 6 },
+            { label: 'Late', data: data.weekly.map(w => w.late), backgroundColor: '#f59e0b', borderRadius: 6 },
+            { label: 'Absent', data: data.weekly.map(w => w.absent), backgroundColor: '#ef4444', borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
+      });
+    }
 
-        container.innerHTML = orders.map(o => {
-          const itemsList = Array.isArray(o.items) ? o.items : [];
-          return `
-            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                <div>
-                  <span class="font-mono font-extrabold text-sm text-slate-950">${o.order_ref}</span>
-                  <p class="text-[11px] text-slate-400">${new Date(o.created_at).toLocaleString()}</p>
-                </div>
-                <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50">
-                  <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                  <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                  <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                </select>
-              </div>
-              <div class="text-xs space-y-1 text-slate-600">
-                <p><strong class="text-slate-900">Customer:</strong> ${o.customer_name} (${o.phone})</p>
-                <p><strong class="text-slate-900">Address:</strong> ${o.address}</p>
-                <p><strong class="text-slate-900">Payment:</strong> ${o.payment_method}</p>
-              </div>
-              <div class="bg-slate-50 rounded-xl p-2.5 space-y-1 text-xs">
-                ${itemsList.map(i => `
-                  <div class="flex justify-between">
-                    <span>${i.qty}x ${i.name} (${i.color}, ${i.size})</span>
-                    <span class="font-semibold">${formatPHP(i.price * i.qty)}</span>
-                  </div>
-                `).join('')}
-              </div>
-              <div class="flex items-center justify-between pt-1">
-                <span class="font-extrabold text-sm text-amber-600">Total: ${formatPHP(o.total_amount)}</span>
-                <button onclick="deleteOrder(${o.id})" class="text-xs text-rose-500 hover:underline font-semibold">Delete</button>
-              </div>
-            </div>
-          `;
-        }).join('');
+    function badgeClass(status) {
+      return {
+        Present: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+        Late: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+        Absent: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
+        Excused: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300',
+        Unmarked: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+      }[status] || '';
+    }
+
+    // ==================== 2. STUDENTS ====================
+    async function loadStudents() {
+      allStudents = await api('/api/students');
+      populateFilterSelect('studentCourseFilter', allStudents.map(s => s.course), 'All Courses');
+      populateFilterSelect('studentSectionFilter', allStudents.map(s => s.section), 'All Sections');
+      renderStudentsTable();
+    }
+
+    function populateFilterSelect(id, values, label) {
+      const el = document.getElementById(id);
+      const unique = [...new Set(values)];
+      el.innerHTML = `<option value="ALL">${label}</option>` + unique.map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+
+    function renderStudentsTable() {
+      const q = document.getElementById('studentSearch').value.toLowerCase();
+      const c = document.getElementById('studentCourseFilter').value;
+      const s = document.getElementById('studentSectionFilter').value;
+
+      const filtered = allStudents.filter(st =>
+        (st.full_name.toLowerCase().includes(q) || st.student_id.toLowerCase().includes(q) || st.contact.toLowerCase().includes(q)) &&
+        (c === 'ALL' || st.course === c) &&
+        (s === 'ALL' || st.section === s)
+      );
+
+      document.getElementById('studentsTableBody').innerHTML = filtered.map(st => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+          <td class="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">${st.student_id}</td>
+          <td class="py-3 px-4 font-semibold">${st.full_name}</td>
+          <td class="py-3 px-4">${st.course} • ${st.year_level}</td>
+          <td class="py-3 px-4">${st.section}</td>
+          <td class="py-3 px-4 text-slate-500">${st.contact}</td>
+          <td class="py-3 px-4 text-right space-x-1">
+            <button onclick='showQrBadge(${JSON.stringify(st)})' title="Generate QR" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-xs font-bold"><i class="fa-solid fa-qrcode"></i></button>
+            <button onclick='openStudentModal(${JSON.stringify(st)})' title="Edit" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-white text-xs font-bold"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteStudent(${st.id})" title="Delete" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 hover:text-white text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('') || `<tr><td colspan="6" class="py-8 text-center text-slate-400">No students match your filters.</td></tr>`;
+    }
+
+    function openStudentModal(st = null) {
+      document.getElementById('studentModalTitle').textContent = st ? 'Edit Student' : 'Add New Student';
+      document.getElementById('stuDbId').value = st ? st.id : 0;
+      document.getElementById('stuCode').value = st ? st.student_id : '';
+      document.getElementById('stuName').value = st ? st.full_name : '';
+      document.getElementById('stuCourse').value = st ? st.course : '';
+      document.getElementById('stuYear').value = st ? st.year_level : '1st Year';
+      document.getElementById('stuSection').value = st ? st.section : '';
+      document.getElementById('stuContact').value = st ? st.contact : '';
+      const m = document.getElementById('studentModal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+
+    function closeStudentModal() {
+      const m = document.getElementById('studentModal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    async function saveStudentForm(e) {
+      e.preventDefault();
+      try {
+        const res = await api('/api/students', 'POST', {
+          id: document.getElementById('stuDbId').value,
+          student_id: document.getElementById('stuCode').value,
+          full_name: document.getElementById('stuName').value,
+          course: document.getElementById('stuCourse').value,
+          year_level: document.getElementById('stuYear').value,
+          section: document.getElementById('stuSection').value,
+          contact: document.getElementById('stuContact').value
+        });
+        notify(res.message);
+        closeStudentModal();
+        loadStudents();
+      } catch (err) { notify(err.message, true); }
+    }
+
+    async function deleteStudent(id) {
+      if (!confirm('Delete this student and their attendance records?')) return;
+      await api(`/api/students/${id}`, 'DELETE');
+      notify('Student removed');
+      loadStudents();
+    }
+
+    function showQrBadge(st) {
+      const box = document.getElementById('qrCanvasBox');
+      box.innerHTML = '';
+      new QRCode(box, { text: st.student_id, width: 180, height: 180 });
+      document.getElementById('qrBadgeName').textContent = st.full_name;
+      document.getElementById('qrBadgeMeta').textContent = `${st.student_id} • ${st.course} (${st.section})`;
+      const m = document.getElementById('qrBadgeModal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+
+    // ==================== 3. DAILY ATTENDANCE ====================
+    async function loadDailyRoll() {
+      const date = document.getElementById('rollDate').value;
+      dailyRoll = await api(`/api/attendance?date=${date}`);
+      populateFilterSelect('rollCourseFilter', dailyRoll.map(r => r.course), 'All Courses');
+      populateFilterSelect('rollSectionFilter', dailyRoll.map(r => r.section), 'All Sections');
+      renderDailyRollTable();
+    }
+
+    function renderDailyRollTable() {
+      const c = document.getElementById('rollCourseFilter').value;
+      const s = document.getElementById('rollSectionFilter').value;
+      const rows = dailyRoll.filter(r => (c === 'ALL' || r.course === c) && (s === 'ALL' || r.section === s));
+
+      document.getElementById('rollTableBody').innerHTML = rows.map(r => `
+        <tr>
+          <td class="py-3 px-4 font-mono font-bold">${r.student_id}</td>
+          <td class="py-3 px-4 font-semibold">${r.full_name}</td>
+          <td class="py-3 px-4">${r.course} - ${r.section}</td>
+          <td class="py-3 px-4 text-slate-500">${r.formatted_time}</td>
+          <td class="py-3 px-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full ${badgeClass(r.status)}">${r.status}</span></td>
+          <td class="py-3 px-4 space-x-1">
+            <button onclick="markRoll(${r.id}, 'Present')" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-600 hover:text-white text-xs font-bold">Present</button>
+            <button onclick="markRoll(${r.id}, 'Late')" class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white text-xs font-bold">Late</button>
+            <button onclick="markRoll(${r.id}, 'Absent')" class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 hover:bg-rose-600 hover:text-white text-xs font-bold">Absent</button>
+            <button onclick="markRoll(${r.id}, 'Excused')" class="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 hover:bg-indigo-600 hover:text-white text-xs font-bold">Excused</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function markRoll(studentDbId, status) {
+      const att_date = document.getElementById('rollDate').value;
+      const res = await api('/api/attendance', 'POST', { student_db_id: studentDbId, att_date, status });
+      notify(res.message);
+      loadDailyRoll();
+    }
+
+    // ==================== 4. QR SCANNER ====================
+    async function processQrCode(studentId) {
+      const box = document.getElementById('scanResultBox');
+      try {
+        const res = await api('/api/qr-scan', 'POST', { student_id: studentId });
+        box.className = 'p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-sm font-semibold';
+        box.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${res.message} at ${res.time}`;
+        notify(res.message);
       } catch (err) {
-        container.innerHTML = `<div class="p-4 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold">${err.message}</div>`;
+        box.className = 'p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-sm font-semibold';
+        box.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> ${err.message}`;
+        notify(err.message, true);
       }
     }
 
-    async function updateOrderStatus(id, status) {
-      await fetch(`/api/orders/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+    function submitManualQr(e) {
+      e.preventDefault();
+      const inp = document.getElementById('manualQrInput');
+      processQrCode(inp.value.trim());
+      inp.value = '';
+    }
+
+    function toggleQrCamera() {
+      const btn = document.getElementById('toggleCamBtn');
+      if (!cameraRunning) {
+        html5QrScanner = new Html5Qrcode("qrReader");
+        html5QrScanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 220 },
+          (decodedText) => { processQrCode(decodedText); }
+        ).then(() => {
+          cameraRunning = true;
+          btn.textContent = 'Stop Camera';
+        }).catch(err => notify('Camera unavailable: ' + err, true));
+      } else {
+        html5QrScanner.stop().then(() => {
+          cameraRunning = false;
+          btn.textContent = 'Start Camera';
+        });
+      }
+    }
+
+    // ==================== 5. RECORDS HISTORY ====================
+    async function loadRecords() {
+      allRecords = await api('/api/records');
+      populateFilterSelect('histCourse', allRecords.map(r => r.course), 'All Courses');
+      populateFilterSelect('histSection', allRecords.map(r => r.section), 'All Sections');
+      renderRecordsTable();
+    }
+
+    function renderRecordsTable() {
+      const d = document.getElementById('histDate').value;
+      const q = document.getElementById('histStudent').value.toLowerCase();
+      const c = document.getElementById('histCourse').value;
+      const s = document.getElementById('histSection').value;
+
+      const filtered = allRecords.filter(r =>
+        (!d || r.att_date === d) &&
+        (!q || r.full_name.toLowerCase().includes(q) || r.student_id.toLowerCase().includes(q)) &&
+        (c === 'ALL' || r.course === c) &&
+        (s === 'ALL' || r.section === s)
+      );
+
+      document.getElementById('recordsTableBody').innerHTML = filtered.map(r => `
+        <tr>
+          <td class="py-3 px-4 font-semibold">${r.att_date}</td>
+          <td class="py-3 px-4 font-mono">${r.student_id}</td>
+          <td class="py-3 px-4 font-semibold">${r.full_name}</td>
+          <td class="py-3 px-4">${r.course}-${r.section}</td>
+          <td class="py-3 px-4">${r.time_in || '--:--'}</td>
+          <td class="py-3 px-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full ${badgeClass(r.status)}">${r.status}</span></td>
+          <td class="py-3 px-4 text-xs text-slate-400">${r.method}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="7" class="py-8 text-center text-slate-400">No attendance history found.</td></tr>`;
+    }
+
+    // ==================== 6. REPORTS & EXPORTS ====================
+    async function loadReports() {
+      const period = document.getElementById('reportPeriod').value;
+      reportRows = await api(`/api/reports?period=${period}`);
+
+      document.getElementById('reportsTableBody').innerHTML = reportRows.map(r => {
+        const atRisk = r.absent_days >= 3 || r.late_days >= 3 || r.rate < 75;
+        return `
+          <tr>
+            <td class="py-3 px-4 font-mono font-bold">${r.student_id}</td>
+            <td class="py-3 px-4 font-semibold">${r.full_name}</td>
+            <td class="py-3 px-4">${r.course}-${r.section}</td>
+            <td class="py-3 px-4 text-emerald-600 font-bold">${r.present_days}</td>
+            <td class="py-3 px-4 text-amber-500 font-bold">${r.late_days}</td>
+            <td class="py-3 px-4 text-rose-600 font-bold">${r.absent_days}</td>
+            <td class="py-3 px-4 font-extrabold">${r.rate}%</td>
+            <td class="py-3 px-4">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${atRisk ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                ${atRisk ? 'Attention Needed' : 'Good Standing'}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportReportExcel() {
+      const wsData = [['Student ID', 'Full Name', 'Course', 'Section', 'Present', 'Late', 'Absent', 'Attendance %']];
+      reportRows.forEach(r => wsData.push([r.student_id, r.full_name, r.course, r.section, r.present_days, r.late_days, r.absent_days, r.rate + '%']));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Attendance Report');
+      XLSX.writeFile(wb, `AttendPulse_Report_${document.getElementById('reportPeriod').value}.xlsx`);
+    }
+
+    function exportReportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(15);
+      doc.text('AttendPulse — Official Attendance Report', 14, 18);
+      doc.autoTable({
+        startY: 25,
+        head: [['ID', 'Name', 'Course/Sec', 'Present', 'Late', 'Absent', 'Rate']],
+        body: reportRows.map(r => [r.student_id, r.full_name, `${r.course}-${r.section}`, r.present_days, r.late_days, r.absent_days, `${r.rate}%`])
       });
-      showToast(`Order marked as ${status}`);
+      doc.save(`AttendPulse_Report_${document.getElementById('reportPeriod').value}.pdf`);
     }
 
-    async function deleteOrder(id) {
-      if (!confirm('Delete this order from PostgreSQL?')) return;
-      await fetch(`/api/orders/${id}`, { method: 'DELETE' });
-      loadOrdersDrawer();
-      showToast('Order deleted');
+    // ==================== 7. USER MANAGEMENT ====================
+    async function loadUsers() {
+      const users = await api('/api/users');
+      document.getElementById('usersTableBody').innerHTML = users.map(u => `
+        <tr>
+          <td class="py-3 px-4 font-semibold">${u.full_name}</td>
+          <td class="py-3 px-4 font-mono">${u.username}</td>
+          <td class="py-3 px-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">${u.role}</span></td>
+          <td class="py-3 px-4 text-xs text-slate-400">${new Date(u.created_at).toLocaleDateString()}</td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="deleteUser(${u.id})" class="text-xs text-rose-600 font-bold hover:underline">Delete</button>
+          </td>
+        </tr>
+      `).join('');
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      updateBadges();
-      renderProducts();
-    });
+    async function addUserAccount(e) {
+      e.preventDefault();
+      try {
+        const res = await api('/api/users', 'POST', {
+          full_name: document.getElementById('newUserName').value,
+          username: document.getElementById('newUserLogin').value,
+          password: document.getElementById('newUserPass').value,
+          role: document.getElementById('newUserRole').value
+        });
+        notify(res.message);
+        e.target.reset();
+        loadUsers();
+      } catch (err) { notify(err.message, true); }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Remove this user account?')) return;
+      try {
+        await api(`/api/users/${id}`, 'DELETE');
+        notify('User deleted');
+        loadUsers();
+      } catch (err) { notify(err.message, true); }
+    }
+
+    // ==================== 8. SETTINGS ====================
+    async function loadSettings() {
+      const s = await api('/api/settings');
+      document.getElementById('setSchoolName').value = s.school_name || 'AttendPulse Academy';
+      document.getElementById('setLateCutoff').value = s.late_cutoff || '08:00:00';
+      document.getElementById('brandSchoolLabel').textContent = s.school_name || 'AttendPulse Academy';
+    }
+
+    async function saveSystemSettings(e) {
+      e.preventDefault();
+      try {
+        const school_name = document.getElementById('setSchoolName').value;
+        const late_cutoff = document.getElementById('setLateCutoff').value;
+        const res = await api('/api/settings', 'POST', { school_name, late_cutoff });
+        document.getElementById('brandSchoolLabel').textContent = school_name;
+        notify(res.message);
+      } catch (err) { notify(err.message, true); }
+    }
+
+    // Boot session check
+    (async () => {
+      if (!authToken) return showLoginScreen();
+      try {
+        const data = await api('/api/me');
+        enterApp(data.user);
+      } catch {
+        showLoginScreen();
+      }
+    })();
   </script>
 </body>
 </html>
