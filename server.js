@@ -18,22 +18,12 @@ const pool = new Pool({
     : false
 });
 
-// Helper: Password hashing & verification using built-in Node crypto
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const hash = crypto.scryptSync(password, salt, 64).toString('hex');
   return `${salt}:${hash}`;
 }
 
-function verifyPassword(password, stored) {
-  if (!stored || !stored.includes(':')) return false;
-  const [salt, key] = stored.split(':');
-  const hashBuffer = crypto.scryptSync(password, salt, 64);
-  const keyBuffer = Buffer.from(key, 'hex');
-  return crypto.timingSafeEqual(hashBuffer, keyBuffer);
-}
-
-// Helper: Philippine Timezone (Asia/Manila) current date & time
 function getManilaDateTime() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
@@ -42,30 +32,22 @@ function getManilaDateTime() {
   return { dateStr, time24, time12 };
 }
 
-// In-memory active session tokens
-const sessions = new Map();
-
-function requireAuth(req, res, next) {
-  const token = req.headers['x-auth-token'];
-  if (!token || !sessions.has(token)) {
-    return res.status(401).json({ error: 'Unauthorized. Please sign in.' });
-  }
-  req.user = sessions.get(token);
+// Default active Admin user (no login screen required)
+function attachDefaultUser(req, res, next) {
+  req.user = {
+    id: 1,
+    full_name: 'System Administrator',
+    username: 'admin',
+    role: 'Admin'
+  };
   next();
 }
 
-function requireAdmin(req, res, next) {
-  if (req.user.role !== 'Admin') {
-    return res.status(403).json({ error: 'Admin privileges required.' });
-  }
-  next();
-}
-
-// Initialize PostgreSQL Tables & Seed Default Data
-async function initDB() {
+let dbReady = false;
+async function ensureDB() {
+  if (dbReady) return;
   if (!dbUrl) {
-    console.error('WARNING: DATABASE_URL is not linked in Railway Variables.');
-    return;
+    throw new Error('DATABASE_URL is not linked in test_railway Variables.');
   }
 
   await pool.query(`
@@ -142,49 +124,15 @@ async function initDB() {
     `);
   }
 
+  dbReady = true;
   console.log('AttendPulse PostgreSQL tables ready.');
 }
 
-// ==================== AUTH ROUTES ====================
-app.post('/api/login', async (req, res) => {
-  if (!dbUrl) {
-    return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
-  }
-  const { username, password } = req.body;
-  try {
-    await initDB();
-    const result = await pool.query(
-      'SELECT * FROM ap_users WHERE LOWER(username) = LOWER($1) LIMIT 1',
-      [username?.trim()]
-    );
-    const user = result.rows[0];
-    if (!user || !verifyPassword(password || '', user.password_hash)) {
-      return res.status(401).json({ error: 'Invalid username or password.' });
-    }
-    const token = crypto.randomBytes(24).toString('hex');
-    const sessionUser = { id: user.id, full_name: user.full_name, username: user.username, role: user.role };
-    sessions.set(token, sessionUser);
-    res.json({ token, user: sessionUser });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: err.message || err.code || 'PostgreSQL connection failed' });
-  }
-});
-
-app.post('/api/logout', (req, res) => {
-  const token = req.headers['x-auth-token'];
-  if (token) sessions.delete(token);
-  res.json({ success: true });
-});
-
-app.get('/api/me', requireAuth, (req, res) => {
-  res.json({ user: req.user });
-});
-
 // ==================== DASHBOARD STATS ====================
-app.get('/api/dashboard', requireAuth, async (req, res) => {
+app.get('/api/dashboard', attachDefaultUser, async (req, res) => {
   const { dateStr } = getManilaDateTime();
   try {
+    await ensureDB();
     const totalStudents = parseInt((await pool.query('SELECT COUNT(*) FROM ap_students')).rows[0].count, 10);
 
     const todayRes = await pool.query(
@@ -223,13 +171,14 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
 
     res.json({ totalStudents, counts, percentage, weekly, recent: recentRes.rows });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Dashboard query failed' });
+    res.status(500).json({ error: err.message || 'Database connection failed' });
   }
 });
 
 // ==================== STUDENTS CRUD ====================
-app.get('/api/students', requireAuth, async (req, res) => {
+app.get('/api/students', attachDefaultUser, async (req, res) => {
   try {
+    await ensureDB();
     const result = await pool.query('SELECT * FROM ap_students ORDER BY id DESC');
     res.json(result.rows);
   } catch (err) {
@@ -237,12 +186,13 @@ app.get('/api/students', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/students', requireAuth, async (req, res) => {
+app.post('/api/students', attachDefaultUser, async (req, res) => {
   const { id, student_id, full_name, course, year_level, section, contact } = req.body;
   if (!student_id || !full_name || !course || !year_level || !section) {
     return res.status(400).json({ error: 'All student fields are required.' });
   }
   try {
+    await ensureDB();
     if (Number(id) > 0) {
       await pool.query(
         'UPDATE ap_students SET student_id=$1, full_name=$2, course=$3, year_level=$4, section=$5, contact=$6 WHERE id=$7',
@@ -261,8 +211,9 @@ app.post('/api/students', requireAuth, async (req, res) => {
   }
 });
 
-app.delete('/api/students/:id', requireAuth, async (req, res) => {
+app.delete('/api/students/:id', attachDefaultUser, async (req, res) => {
   try {
+    await ensureDB();
     await pool.query('DELETE FROM ap_students WHERE id = $1', [req.params.id]);
     res.json({ message: 'Student removed.' });
   } catch (err) {
@@ -271,9 +222,10 @@ app.delete('/api/students/:id', requireAuth, async (req, res) => {
 });
 
 // ==================== DAILY ATTENDANCE ====================
-app.get('/api/attendance', requireAuth, async (req, res) => {
+app.get('/api/attendance', attachDefaultUser, async (req, res) => {
   const date = req.query.date || getManilaDateTime().dateStr;
   try {
+    await ensureDB();
     const result = await pool.query(`
       SELECT s.*,
              COALESCE(a.status, 'Unmarked') AS status,
@@ -289,12 +241,13 @@ app.get('/api/attendance', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/attendance', requireAuth, async (req, res) => {
+app.post('/api/attendance', attachDefaultUser, async (req, res) => {
   const { student_db_id, att_date, status } = req.body;
   const { time12 } = getManilaDateTime();
   const timeIn = ['Present', 'Late'].includes(status) ? time12 : '--:--';
 
   try {
+    await ensureDB();
     await pool.query(`
       INSERT INTO ap_attendance (student_db_id, att_date, time_in, status, method, recorded_by)
       VALUES ($1, $2, $3, $4, 'Manual', $5)
@@ -308,11 +261,12 @@ app.post('/api/attendance', requireAuth, async (req, res) => {
 });
 
 // ==================== QR SCAN CHECK-IN ====================
-app.post('/api/qr-scan', requireAuth, async (req, res) => {
+app.post('/api/qr-scan', attachDefaultUser, async (req, res) => {
   const code = (req.body.student_id || '').trim();
   const { dateStr, time24, time12 } = getManilaDateTime();
 
   try {
+    await ensureDB();
     const stuRes = await pool.query('SELECT * FROM ap_students WHERE student_id = $1 LIMIT 1', [code]);
     const student = stuRes.rows[0];
     if (!student) {
@@ -350,8 +304,9 @@ app.post('/api/qr-scan', requireAuth, async (req, res) => {
 });
 
 // ==================== RECORDS HISTORY ====================
-app.get('/api/records', requireAuth, async (req, res) => {
+app.get('/api/records', attachDefaultUser, async (req, res) => {
   try {
+    await ensureDB();
     const result = await pool.query(`
       SELECT a.id, TO_CHAR(a.att_date, 'YYYY-MM-DD') AS att_date, a.time_in, a.status, a.method, a.recorded_by,
              s.student_id, s.full_name, s.course, s.year_level, s.section
@@ -366,7 +321,7 @@ app.get('/api/records', requireAuth, async (req, res) => {
 });
 
 // ==================== REPORTS & ANALYTICS ====================
-app.get('/api/reports', requireAuth, async (req, res) => {
+app.get('/api/reports', attachDefaultUser, async (req, res) => {
   const period = req.query.period || 'monthly';
   const { dateStr } = getManilaDateTime();
 
@@ -375,6 +330,7 @@ app.get('/api/reports', requireAuth, async (req, res) => {
   if (period === 'weekly') intervalSql = `a.att_date >= (DATE '${dateStr}' - INTERVAL '7 days')`;
 
   try {
+    await ensureDB();
     const result = await pool.query(`
       SELECT s.id, s.student_id, s.full_name, s.course, s.year_level, s.section,
              COUNT(a.id) FILTER (WHERE a.status = 'Present')::int AS present_days,
@@ -400,9 +356,10 @@ app.get('/api/reports', requireAuth, async (req, res) => {
   }
 });
 
-// ==================== USER MANAGEMENT (ADMIN) ====================
-app.get('/api/users', requireAuth, requireAdmin, async (req, res) => {
+// ==================== USER MANAGEMENT ====================
+app.get('/api/users', attachDefaultUser, async (req, res) => {
   try {
+    await ensureDB();
     const result = await pool.query('SELECT id, full_name, username, role, created_at FROM ap_users ORDER BY id ASC');
     res.json(result.rows);
   } catch (err) {
@@ -410,12 +367,13 @@ app.get('/api/users', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/api/users', requireAuth, requireAdmin, async (req, res) => {
+app.post('/api/users', attachDefaultUser, async (req, res) => {
   const { full_name, username, password, role } = req.body;
   if (!full_name || !username || !password || password.length < 4) {
     return res.status(400).json({ error: 'Provide name, username, and password (min 4 chars).' });
   }
   try {
+    await ensureDB();
     await pool.query(
       'INSERT INTO ap_users (full_name, username, password_hash, role) VALUES ($1, $2, $3, $4)',
       [full_name.trim(), username.trim(), hashPassword(password), role === 'Admin' ? 'Admin' : 'Teacher']
@@ -426,11 +384,9 @@ app.post('/api/users', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-app.delete('/api/users/:id', requireAuth, requireAdmin, async (req, res) => {
-  if (Number(req.params.id) === req.user.id) {
-    return res.status(400).json({ error: 'Cannot delete your own active account.' });
-  }
+app.delete('/api/users/:id', attachDefaultUser, async (req, res) => {
   try {
+    await ensureDB();
     await pool.query('DELETE FROM ap_users WHERE id = $1', [req.params.id]);
     res.json({ message: 'User removed.' });
   } catch (err) {
@@ -439,20 +395,22 @@ app.delete('/api/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // ==================== SETTINGS ====================
-app.get('/api/debug', (req, res) => {
-  const pgKeys = Object.keys(process.env).filter(
-    k => k.includes('DATABASE') || k.includes('PG') || k.includes('RAILWAY')
-  );
-  res.json({
-    has_DATABASE_URL: Boolean(process.env.DATABASE_URL),
-    has_DATABASE_PUBLIC_URL: Boolean(process.env.DATABASE_PUBLIC_URL),
-    detected_keys: pgKeys
-  });
+app.get('/api/settings', attachDefaultUser, async (req, res) => {
+  try {
+    await ensureDB();
+    const result = await pool.query('SELECT * FROM ap_settings');
+    const map = {};
+    result.rows.forEach(r => { map[r.setting_key] = r.setting_value; });
+    res.json(map);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/settings', requireAuth, requireAdmin, async (req, res) => {
+app.post('/api/settings', attachDefaultUser, async (req, res) => {
   const { school_name, late_cutoff } = req.body;
   try {
+    await ensureDB();
     await pool.query(
       `INSERT INTO ap_settings (setting_key, setting_value) VALUES ('school_name', $1), ('late_cutoff', $2)
        ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value`,
@@ -464,8 +422,7 @@ app.post('/api/settings', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// Start HTTP Server Immediately & Initialize DB
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`AttendPulse Node.js server running on port ${PORT}`);
-  initDB().catch(err => console.error('Initial DB setup error:', err.message));
+  ensureDB().catch(err => console.error('Initial DB setup error:', err.message));
 });
