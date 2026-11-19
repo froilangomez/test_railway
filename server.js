@@ -433,33 +433,27 @@ app.delete('/api/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // ==================== SETTINGS ====================
-app.get('/api/settings', requireAuth, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM ap_settings');
-    const map = {};
-    result.rows.forEach(r => { map[r.setting_key] = r.setting_value; });
-    res.json(map);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+app.post('/api/login', async (req, res) => {
+  if (!dbUrl) {
+    return res.status(500).json({ error: 'DATABASE_URL is not linked in Railway Variables.' });
   }
-});
-
-app.post('/api/settings', requireAuth, requireAdmin, async (req, res) => {
-  const { school_name, late_cutoff } = req.body;
+  const { username, password } = req.body;
   try {
-    await pool.query(
-      `INSERT INTO ap_settings (setting_key, setting_value) VALUES ('school_name', $1), ('late_cutoff', $2)
-       ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value`,
-      [school_name?.trim() || 'AttendPulse Academy', late_cutoff?.trim() || '08:00:00']
+    await initDB(); // Ensures tables & default users exist before checking login
+    const result = await pool.query(
+      'SELECT * FROM ap_users WHERE LOWER(username) = LOWER($1) LIMIT 1',
+      [username?.trim()]
     );
-    res.json({ message: 'Settings saved!' });
+    const user = result.rows[0];
+    if (!user || !verifyPassword(password || '', user.password_hash)) {
+      return res.status(401).json({ error: 'Invalid username or password.' });
+    }
+    const token = crypto.randomBytes(24).toString('hex');
+    const sessionUser = { id: user.id, full_name: user.full_name, username: user.username, role: user.role };
+    sessions.set(token, sessionUser);
+    res.json({ token, user: sessionUser });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Login DB Error:', err);
+    res.status(500).json({ error: err.message || err.code || 'PostgreSQL connection failed' });
   }
-});
-
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`AttendPulse Node.js server running on port ${PORT}`);
-  });
 });
